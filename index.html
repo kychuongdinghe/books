@@ -17,6 +17,8 @@
     width: 100%;
     aspect-ratio: 2 / 3;
     overflow: hidden;
+    border-radius: 4px;
+    transition: box-shadow 0.35s ease;
   }
 
   .book-image img {
@@ -30,8 +32,13 @@
       filter 0.35s ease;
   }
 
+  .book-card:hover .book-image {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  }
+
   .book-card:hover .book-image img {
-    transform: scale(1.1);
+    transform: scale(1.12);
+    filter: contrast(1.1) saturate(1.25) brightness(0.95);
   }
 
   .book-title {
@@ -40,24 +47,21 @@
     text-align: center;
     color: #222;
     font-family: Arial, sans-serif;
+    transition: color 0.25s ease;
+  }
+
+  .book-card:hover .book-title {
+    color: #7A2E2E;
+    text-decoration: underline;
   }
 </style>
 </head>
 <body>
 
-
-  href="https://forms.gle/CHxHK9aetnco9cxm9"
-  class="book-card"
-  target="_blank"
-  rel="noopener noreferrer"
->
+<a href="https://forms.gle/CHxHK9aetnco9cxm9" class="book-card" target="_blank" rel="noopener noreferrer">
   <div class="book-image">
-    <img
-      src="https://raw.githubusercontent.com/kychuongdinghe/kychuong-image/2809af10c152352bb7f2f9251c785fb3535bce7e/3.png"
-      alt="Tên sách"
-    >
+    <img src="https://raw.githubusercontent.com/kychuongdinghe/kychuong-image/2809af10c152352bb7f2f9251c785fb3535bce7e/3.png" alt="Tên sách">
   </div>
-
   <div class="book-title">
     Xem thêm
   </div>
