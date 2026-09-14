@@ -1,71 +1,172 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Xem thêm sách</title>
-<style>
-  .book-card {
-    display: block;
-    width: 100%;
-    max-width: 240px;
-    text-decoration: none;
-    color: #222;
-  }
+    <meta charset="UTF-8">
+    <title>Giao diện Sách</title>
+    <style>
+        :root {
+            /* THAY ĐỔI CÁC THÔNG SỐ CỦA BẠN TẠI ĐÂY */
+            --chieu-rong-that: 20.5cm; /* Chiều rộng thực tế của sách */
+            --chieu-cao-that: 27.5cm;  /* Chiều cao thực tế của sách */
+            --ti-le: 0.1;              /* Tỉ lệ hiển thị 1/10 */
+        }
 
-  .book-image {
-    width: 100%;
-    aspect-ratio: 2 / 3;
-    overflow: hidden;
-    border-radius: 4px;
-    transition: box-shadow 0.35s ease;
-  }
+        body {
+            font-family: Nunito, sans-serif;
+            margin: 20px;
+            background-color: #fff;
+            color: #333;
+        }
 
-  .book-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+        /* Khung chứa bao gồm cả cây thước */
+        .container {
+            display: inline-grid;
+            grid-template-columns: auto 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 5px;
+            padding: 10px;
+        }
 
-    transition:
-      transform 0.35s ease,
-      filter 0.35s ease;
-  }
+        /* Thước đo hàng ngang (Top) */
+        .ruler-x {
+            grid-column: 2;
+            grid-row: 1;
+            height: 20px;
+            border-bottom: 2px solid #333;
+            position: relative;
+            width: calc(var(--chieu-rong-that) * var(--ti-le) * 37.795); /* Quy đổi cm sang pixel */
+        }
+        .ruler-x::after {
+            content: attr(data-label);
+            position: absolute;
+            left: 50%;
+            bottom: 4px;
+            transform: translateX(-50%);
+            font-size: 11px;
+            font-weight: bold;
+        }
 
-  .book-card:hover .book-image {
-    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-  }
+        /* Thước đo hàng dọc (Left) */
+        .ruler-y {
+            grid-column: 1;
+            grid-row: 2;
+            width: 35px;
+            border-right: 2px solid #333;
+            position: relative;
+            height: calc(var(--chieu-cao-that) * var(--ti-le) * 37.795);
+        }
+        .ruler-y::after {
+            content: attr(data-label);
+            position: absolute;
+            top: 50%;
+            right: 6px;
+            transform: translateY(-50%) rotate(-90deg);
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
 
-  .book-card:hover .book-image img {
-    transform: scale(1.12);
-    filter: contrast(1.1) saturate(1.25) brightness(0.95);
-  }
+        /* Khung hiển thị thông tin truyện */
+        .book-card {
+            grid-column: 2;
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
 
-  .book-title {
-    margin-top: 10px;
-    font-size: 15px;
-    text-align: center;
-    color: #222;
-    font-family: Arial, sans-serif;
-    transition: color 0.25s ease;
-  }
+        /* Khung ảnh hỗ trợ hiệu ứng đổi hình khi Hover */
+        .image-container {
+            position: relative;
+            /* Tự động resize ảnh chuẩn tỉ lệ 1/10 dựa trên số cm nhập ở trên */
+            width: calc(var(--chieu-rong-that) * var(--ti-le) * 37.795);
+            height: calc(var(--chieu-cao-that) * var(--ti-le) * 37.795);
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
 
-  .book-card:hover .book-title {
-    color: #7A2E2E;
-    text-decoration: underline;
-  }
-</style>
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Ảnh thứ 2 mặc định ẩn đi */
+        .image-container .img-hover {
+            opacity: 0;
+        }
+
+        /* Khi đưa chuột vào: ẩn ảnh gốc, hiện ảnh thứ 2 */
+        .image-container:hover .img-main {
+            opacity: 0;
+        }
+        .image-container:hover .img-hover {
+            opacity: 1;
+        }
+
+        /* Phần text thông tin */
+        .book-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 12px 0 4px 0;
+        }
+
+        .book-author {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .btn-read-try {
+            font-size: 14px;
+            color: #0066cc;
+            text-decoration: none;
+        }
+        .btn-read-try:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
 
-<a href="https://forms.gle/CHxHK9aetnco9cxm9" class="book-card" target="_blank" rel="noopener noreferrer">
-  <div class="book-image">
-    <img src="https://raw.githubusercontent.com/kychuongdinghe/kychuong-image/2809af10c152352bb7f2f9251c785fb3535bce7e/3.png" alt="Tên sách">
-  </div>
-  <div class="book-title">
-    Xem thêm
-  </div>
-</a>
+<div class="container">
+    <!-- Thước ngang & dọc (Tự động điền số cm vào label) -->
+    <div class="ruler-x" id="rx"></div>
+    <div class="ruler-y" id="ry"></div>
+
+    <!-- Khối thông tin truyện -->
+    <div class="book-card">
+        <!-- Nhấp vào ảnh dẫn tới link Google Form đặt hàng -->
+        <a href="https://forms.gle/s8kRrWggnDmkEp157" target="_blank">
+            <div class="image-container">
+                <!-- Ảnh gốc hiển thị ban đầu -->
+                <img src="2.png" alt="Bìa trước" class="img-main">
+                <!-- Ảnh thứ 2 hiển thị khi di chuột vào -->
+                <img src="3.png" alt="Bìa sau hoặc quà tặng" class="img-hover">
+            </div>
+        </a>
+        
+        <!-- Thông tin văn bản -->
+        <div class="book-title">The Blues of Now</div>
+        <div class="book-author">Tác giả: Nguyễn Minh Quang</div>
+        <a href="https://sites.google.com/view/kychuongbooks/review" target="_blank" class="btn-read-try">Đọc thử tại đây</a>
+    </div>
+</div>
+
+<script>
+    // Tự động cập nhật số đo hiển thị trên cây thước từ CSS biến
+    const root = document.documentElement;
+    const widthCm = getComputedStyle(root).getPropertyValue('--chieu-rong-that').trim();
+    const heightCm = getComputedStyle(root).getPropertyValue('--chieu-cao-that').trim();
+    
+    document.getElementById('rx').setAttribute('data-label', widthCm);
+    document.getElementById('ry').setAttribute('data-label', heightCm);
+</script>
 
 </body>
 </html>
