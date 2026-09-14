@@ -12,7 +12,6 @@
             color: #333;
         }
 
-        /* Lưới hiển thị tự động xuống hàng khi hết chỗ */
         .books-grid {
             display: flex;
             flex-wrap: wrap;
@@ -20,7 +19,6 @@
             justify-content: flex-start;
         }
 
-        /* Khung chứa của từng cuốn sách bao gồm thước */
         .book-container {
             display: inline-grid;
             grid-template-columns: auto 1fr;
@@ -29,7 +27,6 @@
             padding: 5px;
         }
 
-        /* Thước đo hàng ngang */
         .ruler-x {
             grid-column: 2;
             grid-row: 1;
@@ -48,7 +45,6 @@
             white-space: nowrap;
         }
 
-        /* Thước đo hàng dọc */
         .ruler-y {
             grid-column: 1;
             grid-row: 2;
@@ -67,7 +63,6 @@
             white-space: nowrap;
         }
 
-        /* Khung thẻ thông tin */
         .book-card {
             grid-column: 2;
             grid-row: 2;
@@ -76,7 +71,6 @@
             align-items: flex-start;
         }
 
-        /* Khung ảnh hiệu ứng Hover */
         .image-container {
             position: relative;
             cursor: pointer;
@@ -106,7 +100,6 @@
             opacity: 1;
         }
 
-        /* Thông tin văn bản */
         .book-title {
             font-size: 13px;
             font-weight: bold;
@@ -128,7 +121,7 @@
         .btn-read-try:hover {
             text-decoration: underline;
         }
-        
+
         .loading {
             font-size: 14px;
             color: #666;
@@ -145,53 +138,51 @@
 <script>
     // 1. ID FILE GOOGLE SHEETS CỦA BẠN
     const SHEET_ID = '1UdZcyN1rjHxQChTS7hxM0EqrPyORxiXne7JHFPws4bg';
-    
-    // 2. ĐƯỜNG DẪN THƯ MỤC RAW GITHUB CHỨA ẢNH CỦA BẠN
-    const GITHUB_FOLDER_URL = 'https://githubusercontent.com';
-    
-    const url = `https://google.com{SHEET_ID}/gviz/tq?tqx=out:json`;
+
+    // 2. ⚠️ ĐƯỜNG DẪN THƯ MỤC RAW GITHUB CHỨA ẢNH — điền đúng user/repo/branch của bạn
+    //    Ví dụ: 'https://raw.githubusercontent.com/kychuongdinghe/kychuong-image/main/'
+    //    Lưu ý bắt buộc: phải có "raw." ở đầu, và có dấu "/" ở CUỐI đường dẫn
+    const GITHUB_FOLDER_URL = 'https://raw.githubusercontent.com/kychuongdinghe/books/main/';
+
+    // ⚠️ Đã sửa: thêm $ trước {SHEET_ID} và đổi đúng domain docs.google.com
+      const SHEET_ID = '1UdZcyN1rjHxQChTS7hxM0EqrPyORxiXne7JHFPws4bg';
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
     fetch(url)
         .then(res => res.text())
         .then(data => {
-            // Sửa lỗi: Lấy chính xác phần tử đầu tiên match[1] của biểu thức chính quy RegEx
             const match = data.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
             if (!match || !match[1]) throw new Error("Không thể bóc tách cấu trúc phản hồi");
-            
+
             const json = JSON.parse(match[1]);
             const rows = json.table.rows;
-            
-            const container = document.getElementById('books-container');
-            container.innerHTML = ''; // Xóa chữ loading đi
 
-            // Hệ số thu nhỏ tỷ lệ 1/10
-            const pixelScale = 3.75; 
+            const container = document.getElementById('books-container');
+            container.innerHTML = '';
+
+            const pixelScale = 3.75;
 
             rows.forEach((row) => {
                 if (!row || !row.c) return;
 
-                // Hàm hỗ trợ lấy dữ liệu an toàn dựa trên thứ tự index cột cố định (A=0, B=1, C=2,...)
                 const getVal = (index) => {
                     return (row.c[index] && row.c[index].v !== null) ? row.c[index].v : '';
                 };
 
-                const title        = getVal(0).toString().trim(); // Cột A
-                const author       = getVal(1).toString().trim(); // Cột B
-                const imgMainName  = getVal(2).toString().trim(); // Cột C
-                const imgHoverName = getVal(3).toString().trim(); // Cột D
-                const widthCm      = parseFloat(getVal(4)) || 0;  // Cột E
-                const heightCm     = parseFloat(getVal(5)) || 0;  // Cột F
-                const linkForm     = getVal(6).toString().trim() || '#'; // Cột G
-                const linkRead     = getVal(7).toString().trim() || '#'; // Cột H
+                const title        = getVal(0).toString().trim();
+                const author       = getVal(1).toString().trim();
+                const imgMainName  = getVal(2).toString().trim();
+                const imgHoverName = getVal(3).toString().trim();
+                const widthCm      = parseFloat(getVal(4)) || 0;
+                const heightCm     = parseFloat(getVal(5)) || 0;
+                const linkForm     = getVal(6).toString().trim() || '#';
+                const linkRead     = getVal(7).toString().trim() || '#';
 
-                // Bỏ qua hàng tiêu đề cột đầu tiên
                 if (title === 'title' || !title) return;
 
-                // Tự động ghép nối chuỗi thành link ảnh hoàn chỉnh từ GitHub
                 const imgMain  = GITHUB_FOLDER_URL + imgMainName;
                 const imgHover = GITHUB_FOLDER_URL + imgHoverName;
 
-                // Quy đổi kích thước pixel cho khung ảnh
                 const displayWidth = Math.round(widthCm * pixelScale) + 'px';
                 const displayHeight = Math.round(heightCm * pixelScale) + 'px';
 
@@ -200,7 +191,7 @@
                         <div class="ruler-x" style="width: ${displayWidth};" data-label="${widthCm} cm"></div>
                         <div class="ruler-y" style="height: ${displayHeight};" data-label="${heightCm} cm"></div>
                         <div class="book-card">
-                            <a href="${linkForm}" target="_blank">
+                            <a href="${linkForm}" target="_blank" rel="noopener noreferrer">
                                 <div class="image-container" style="width: ${displayWidth}; height: ${displayHeight};">
                                     <img src="${imgMain}" alt="${title}" class="img-main">
                                     <img src="${imgHover}" alt="${title} Hover" class="img-hover">
@@ -208,13 +199,13 @@
                             </a>
                             <div class="book-title" style="max-width: ${displayWidth}; word-wrap: break-word;">${title}</div>
                             <div class="book-author">Tác giả: ${author}</div>
-                            <a href="${linkRead}" target="_blank" class="btn-read-try">Đọc thử tại đây</a>
+                            <a href="${linkRead}" target="_blank" rel="noopener noreferrer" class="btn-read-try">Đọc thử tại đây</a>
                         </div>
                     </div>
                 `;
                 container.innerHTML += bookHtml;
             });
-            
+
             if (container.innerHTML === '') {
                 container.innerHTML = '<div class="loading">Không tìm thấy dữ liệu truyện. Hãy kiểm tra xem bạn đã điền thông tin truyện ở hàng số 2 trong file Google Sheets chưa nhé!</div>';
             }
