@@ -5,15 +5,21 @@
     <title>Giao diện Sách</title>
     <style>
         :root {
-            /* THAY ĐỔI CÁC THÔNG SỐ CỦA BẠN TẠI ĐÂY */
-            --chieu-rong-that: 20.5cm; /* Chiều rộng thực tế của sách */
-            --chieu-cao-that: 27.5cm;  /* Chiều cao thực tế của sách */
-            --ti-le: 0.1;              /* Tỉ lệ hiển thị 1/10 */
+            /* CẤU HÌNH KÍCH THƯỚC KHỔ GIẤY THẬT (ĐƠN VỊ MM) ĐỂ THU NHỎ CHUẨN XÁC */
+            --chieu-rong-that-mm: 205; /* 20.5cm đổi sang mm */
+            --chieu-cao-that-mm: 275;  /* 27.5cm đổi sang mm */
+            
+            /* Tỉ lệ hiển thị màn hình (Hệ số 0.378 giúp quy đổi kích thước thật thu nhỏ 10 lần ra chuẩn pixel) */
+            --ti-le-pixel: 0.378; 
+            
+            /* Tính toán kích thước khung hiển thị tự động */
+            --width-display: calc(var(--chieu-rong-that-mm) * var(--ti-le-pixel) * 1px);
+            --height-display: calc(var(--chieu-cao-that-mm) * var(--ti-le-pixel) * 1px);
         }
 
         body {
             font-family: Nunito, sans-serif;
-            margin: 20px;
+            margin: 10px;
             background-color: #fff;
             color: #333;
         }
@@ -23,24 +29,24 @@
             display: inline-grid;
             grid-template-columns: auto 1fr;
             grid-template-rows: auto 1fr;
-            gap: 5px;
-            padding: 10px;
+            gap: 6px;
+            padding: 5px;
         }
 
         /* Thước đo hàng ngang (Top) */
         .ruler-x {
             grid-column: 2;
             grid-row: 1;
-            height: 20px;
+            height: 18px;
             border-bottom: 2px solid #333;
             position: relative;
-            width: calc(var(--chieu-rong-that) * var(--ti-le) * 37.795); /* Quy đổi cm sang pixel */
+            width: var(--width-display);
         }
         .ruler-x::after {
             content: attr(data-label);
             position: absolute;
             left: 50%;
-            bottom: 4px;
+            bottom: 2px;
             transform: translateX(-50%);
             font-size: 11px;
             font-weight: bold;
@@ -53,13 +59,13 @@
             width: 35px;
             border-right: 2px solid #333;
             position: relative;
-            height: calc(var(--chieu-cao-that) * var(--ti-le) * 37.795);
+            height: var(--height-display);
         }
         .ruler-y::after {
             content: attr(data-label);
             position: absolute;
             top: 50%;
-            right: 6px;
+            right: 5px;
             transform: translateY(-50%) rotate(-90deg);
             font-size: 11px;
             font-weight: bold;
@@ -75,21 +81,21 @@
             align-items: flex-start;
         }
 
-        /* Khung ảnh hỗ trợ hiệu ứng đổi hình khi Hover */
+        /* Khung ảnh hỗ trợ hiệu ứng đổi hình khi Hover và ép đúng tỷ lệ */
         .image-container {
             position: relative;
-            /* Tự động resize ảnh chuẩn tỉ lệ 1/10 dựa trên số cm nhập ở trên */
-            width: calc(var(--chieu-rong-that) * var(--ti-le) * 37.795);
-            height: calc(var(--chieu-cao-that) * var(--ti-le) * 37.795);
+            width: var(--width-display);
+            height: var(--height-display);
             cursor: pointer;
             overflow: hidden;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: #f7f7f7;
         }
 
         .image-container img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: fill; /* Ép ảnh co giãn khít theo tỷ lệ vàng của khổ giấy */
             position: absolute;
             top: 0;
             left: 0;
@@ -109,21 +115,23 @@
             opacity: 1;
         }
 
-        /* Phần text thông tin */
+        /* Phần text thông tin bên dưới ảnh */
         .book-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            margin: 12px 0 4px 0;
+            margin: 10px 0 3px 0;
+            max-width: var(--width-display);
+            word-wrap: break-word;
         }
 
         .book-author {
-            font-size: 14px;
+            font-size: 13px;
             color: #666;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .btn-read-try {
-            font-size: 14px;
+            font-size: 13px;
             color: #0066cc;
             text-decoration: none;
         }
@@ -135,7 +143,7 @@
 <body>
 
 <div class="container">
-    <!-- Thước ngang & dọc (Tự động điền số cm vào label) -->
+    <!-- Thước ngang & dọc (Tự động điền số cm vào label từ Script) -->
     <div class="ruler-x" id="rx"></div>
     <div class="ruler-y" id="ry"></div>
 
@@ -159,13 +167,13 @@
 </div>
 
 <script>
-    // Tự động cập nhật số đo hiển thị trên cây thước từ CSS biến
+    // Tự động chuyển đổi hiển thị số cm thật lên thanh thước đo
     const root = document.documentElement;
-    const widthCm = getComputedStyle(root).getPropertyValue('--chieu-rong-that').trim();
-    const heightCm = getComputedStyle(root).getPropertyValue('--chieu-cao-that').trim();
+    const wMm = parseFloat(getComputedStyle(root).getPropertyValue('--chieu-rong-that-mm'));
+    const hMm = parseFloat(getComputedStyle(root).getPropertyValue('--chieu-cao-that-mm'));
     
-    document.getElementById('rx').setAttribute('data-label', widthCm);
-    document.getElementById('ry').setAttribute('data-label', heightCm);
+    document.getElementById('rx').setAttribute('data-label', (wMm / 10) + ' cm');
+    document.getElementById('ry').setAttribute('data-label', (hMm / 10) + ' cm');
 </script>
 
 </body>
