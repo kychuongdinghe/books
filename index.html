@@ -143,10 +143,10 @@
 </div>
 
 <script>
-    // 1. ID FILE GOOGLE SHEETS CỦA BẠN (Giữ nguyên chuẩn xác)
+    // 1. ID FILE GOOGLE SHEETS CỦA BẠN
     const SHEET_ID = '1UdZcyN1rjHxQChTS7hxM0EqrPyORxiXne7JHFPws4bg';
     
-    // 2. ĐƯỜNG DẪN THƯ MỤC RAW GITHUB CHỨA ẢNH CỦA BẠN (Giữ nguyên chuẩn xác)
+    // 2. ĐƯỜNG DẪN THƯ MỤC RAW GITHUB CHỨA ẢNH CỦA BẠN
     const GITHUB_FOLDER_URL = 'https://githubusercontent.com';
     
     const url = `https://google.com{SHEET_ID}/gviz/tq?tqx=out:json`;
@@ -154,23 +154,23 @@
     fetch(url)
         .then(res => res.text())
         .then(data => {
-            // Giải mã chuỗi JSON an toàn tuyệt đối bằng RegEx, tìm cặp dấu ngoặc nhọn lớn ngoài cùng { ... }
+            // Sửa lỗi: Lấy chính xác phần tử đầu tiên match[1] của biểu thức chính quy RegEx
             const match = data.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-            if (!match) throw new Error("Không thể bóc tách cấu trúc phản hồi của Google Sheets");
+            if (!match || !match[1]) throw new Error("Không thể bóc tách cấu trúc phản hồi");
             
             const json = JSON.parse(match[1]);
             const rows = json.table.rows;
             
             const container = document.getElementById('books-container');
-            container.innerHTML = ''; // Xóa thông báo Loading đi
+            container.innerHTML = ''; // Xóa chữ loading đi
 
-            // Hệ số quy đổi pixel thu nhỏ tỷ lệ tương đối ~1/10
+            // Hệ số thu nhỏ tỷ lệ 1/10
             const pixelScale = 3.75; 
 
             rows.forEach((row) => {
                 if (!row || !row.c) return;
 
-                // Hàm hỗ trợ lấy dữ liệu an toàn theo vị trí index cố định của cột (A=0, B=1, C=2, ...)
+                // Hàm hỗ trợ lấy dữ liệu an toàn dựa trên thứ tự index cột cố định (A=0, B=1, C=2,...)
                 const getVal = (index) => {
                     return (row.c[index] && row.c[index].v !== null) ? row.c[index].v : '';
                 };
@@ -184,10 +184,10 @@
                 const linkForm     = getVal(6).toString().trim() || '#'; // Cột G
                 const linkRead     = getVal(7).toString().trim() || '#'; // Cột H
 
-                // Bỏ qua hàng tiêu đề nếu đọc nhầm
+                // Bỏ qua hàng tiêu đề cột đầu tiên
                 if (title === 'title' || !title) return;
 
-                // Tự động ghép nối chuỗi thành link ảnh hoàn chỉnh từ thư mục GitHub của bạn
+                // Tự động ghép nối chuỗi thành link ảnh hoàn chỉnh từ GitHub
                 const imgMain  = GITHUB_FOLDER_URL + imgMainName;
                 const imgHover = GITHUB_FOLDER_URL + imgHoverName;
 
@@ -216,11 +216,11 @@
             });
             
             if (container.innerHTML === '') {
-                container.innerHTML = '<div class="loading">Không tìm thấy dữ liệu truyện. Hãy chắc chắn rằng bạn đã điền thông tin truyện ở hàng số 2 trong file Google Sheets nhé!</div>';
+                container.innerHTML = '<div class="loading">Không tìm thấy dữ liệu truyện. Hãy kiểm tra xem bạn đã điền thông tin truyện ở hàng số 2 trong file Google Sheets chưa nhé!</div>';
             }
         })
         .catch(err => {
-            document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể đồng bộ dữ liệu. Vui lòng kiểm tra cấu trúc bảng tính hoặc liên kết mạng!</div>';
+            document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể đồng bộ dữ liệu. Vui lòng kiểm tra lại cấu trúc bảng tính hoặc liên kết mạng!</div>';
             console.error(err);
         });
 </script>
