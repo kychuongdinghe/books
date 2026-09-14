@@ -139,14 +139,14 @@
 <body>
 
 <div class="books-grid" id="books-container">
-    <div class="loading">Đang tải danh sách sách từ Google Sheets...</div>
+    <div class="loading">Đang kết nối và đồng bộ dữ liệu từ Google Sheets...</div>
 </div>
 
 <script>
-    // 1. ID FILE GOOGLE SHEETS CỦA BẠN (Đã điền sẵn chuẩn xác)
+    // 1. ID FILE GOOGLE SHEETS CỦA BẠN
     const SHEET_ID = '1UdZcyN1rjHxQChTS7hxM0EqrPyORxiXne7JHFPws4bg';
     
-    // 2. ĐƯỜNG DẪN THƯ MỤC RAW GITHUB (Đã sửa lại đúng định dạng lấy file ảnh gốc từ nhánh main)
+    // 2. ĐƯỜNG DẪN THƯ MỤC RAW GITHUB CHỨA ẢNH CỦA BẠN
     const GITHUB_FOLDER_URL = 'https://githubusercontent.com';
     
     const url = `https://google.com{SHEET_ID}/gviz/tq?tqx=out:json`;
@@ -154,26 +154,59 @@
     fetch(url)
         .then(res => res.text())
         .then(data => {
-            const jsonString = data.substring(47, data.length - 2);
-            const json = JSON.parse(jsonString);
-            const rows = json.table.rows;
+            // Giải mã chuỗi bảo mật của Google Sheets
+            const startIdx = data.indexOf('{');
+            const endIdx = data.lastIndexOf('}');
+            if (startIdx === -1 || endIdx === -1) throw new Error("Dữ liệu Sheets không hợp lệ");
             
+            const jsonString = data.substring(startIdx, endIdx + 1);
+            const json = JSON.parse(jsonString);
+            
+            // Xây dựng bản đồ ánh xạ cột không phân biệt chữ hoa/thường để tránh lệch index
+            const cols = json.table.cols;
+            const colMap = {};
+            cols.forEach((col, idx) => {
+                const label = col.label ? col.label.trim().toLowerCase() : '';
+                if (label) {
+                    colMap[label] = idx;
+                }
+            });
+
+            // Nếu Google không trả về label ở hàng 1, tự động gán mặc định từ A đến H theo ảnh của bạn
+            const getIndex = (name) => {
+                const lowerName = name.toLowerCase();
+                if (colMap[lowerName] !== undefined) return colMap[lowerName];
+                // Sắp xếp dự phòng: A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7
+                const fallback = { title:0, author:1, imgmain:2, imghover:3, widthcm:4, heightcm:5, linkform:6, linkread:7 };
+                return fallback[lowerName];
+            };
+
+            const rows = json.table.rows;
             const container = document.getElementById('books-container');
             container.innerHTML = ''; 
 
             const pixelScale = 3.75; 
 
-            rows.forEach(row => {
-                if (!row.c || !row.c[0]) return; // Bỏ qua nếu cột Tên truyện bị trống
+            rows.forEach((row, rowIdx) => {
+                // Bỏ qua hàng đầu tiên nếu hệ thống đọc nhầm cả hàng tiêu đề thành dữ liệu
+                if (rowIdx === 0 && row.c && row.c[getIndex('title')] && row.c[getIndex('title')].v === 'title') return;
+                if (!row.c) return;
 
-                const title    = row.c[0] ? row.c[0].v : '';
-                const author   = row.c[1] ? row.c[1].v : '';
-                const imgMainName  = row.c[2] ? row.c[2].v : '';
-                const imgHoverName = row.c[3] ? row.c[3].v : '';
-                const widthCm  = row.c[4] ? parseFloat(row.c[4].v) : 0;
-                const heightCm = row.c[5] ? parseFloat(row.c[5].v) : 0;
-                const linkForm = row.c[6] ? row.c[6].v : '#';
-                const linkRead = row.c[7] ? row.c[7].v : '#';
+                const getVal = (colName) => {
+                    const idx = getIndex(colName);
+                    return (row.c[idx] && row.c[idx].v !== null) ? row.c[idx].v : '';
+                };
+
+                const title        = getVal('title').toString().trim();
+                const author       = getVal('author').toString().trim();
+                const imgMainName  = getVal('imgMain').toString().trim();
+                const imgHoverName = getVal('imgHover').toString().trim();
+                const widthCm      = parseFloat(getVal('widthCm')) || 0;
+                const heightCm     = parseFloat(getVal('heightCm')) || 0;
+                const linkForm     = getVal('linkForm').toString().trim() || '#';
+                const linkRead     = getVal('linkRead').toString().trim() || '#';
+
+                if (!title) return; // Bỏ qua nếu hàng này không có tên truyện
 
                 // Tự động ghép nối chuỗi thành link ảnh hoàn chỉnh từ GitHub
                 const imgMain  = GITHUB_FOLDER_URL + imgMainName;
@@ -202,222 +235,13 @@
                 `;
                 container.innerHTML += bookHtml;
             });
-        })
-        .catch(err => {
-            document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể tải dữ liệu. Vui lòng kiểm tra quyền chia sẻ link Google Sheets!</div>';
-            console.error(err);
-        });
-</script>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Danh mục Sách Tự Động</title>
-    <style>
-        body {
-            font-family: Nunito, sans-serif;
-            margin: 0;
-            padding: 10px;
-            background-color: transparent;
-            color: #333;
-        }
-
-        /* Lưới hiển thị tự động xuống hàng khi hết chỗ */
-        .books-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 35px;
-            justify-content: flex-start;
-        }
-
-        /* Khung chứa của từng cuốn sách bao gồm thước */
-        .book-container {
-            display: inline-grid;
-            grid-template-columns: auto 1fr;
-            grid-template-rows: auto 1fr;
-            gap: 5px;
-            padding: 5px;
-        }
-
-        /* Thước đo hàng ngang */
-        .ruler-x {
-            grid-column: 2;
-            grid-row: 1;
-            height: 16px;
-            border-bottom: 2px solid #333;
-            position: relative;
-        }
-        .ruler-x::after {
-            content: attr(data-label);
-            position: absolute;
-            left: 50%;
-            bottom: 2px;
-            transform: translateX(-50%);
-            font-size: 10px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-
-        /* Thước đo hàng dọc */
-        .ruler-y {
-            grid-column: 1;
-            grid-row: 2;
-            width: 32px;
-            border-right: 2px solid #333;
-            position: relative;
-        }
-        .ruler-y::after {
-            content: attr(data-label);
-            position: absolute;
-            top: 50%;
-            right: 4px;
-            transform: translateY(-50%) rotate(-90deg);
-            font-size: 10px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-
-        /* Khung thẻ thông tin */
-        .book-card {
-            grid-column: 2;
-            grid-row: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        /* Khung ảnh hiệu ứng Hover */
-        .image-container {
-            position: relative;
-            cursor: pointer;
-            overflow: hidden;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            background-color: #f7f7f7;
-        }
-
-        .image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: fill;
-            position: absolute;
-            top: 0;
-            left: 0;
-            transition: opacity 0.25s ease;
-        }
-
-        .image-container .img-hover {
-            opacity: 0;
-        }
-
-        .image-container:hover .img-main {
-            opacity: 0;
-        }
-        .image-container:hover .img-hover {
-            opacity: 1;
-        }
-
-        /* Thông tin văn bản */
-        .book-title {
-            font-size: 13px;
-            font-weight: bold;
-            margin: 6px 0 2px 0;
-            line-height: 1.2;
-        }
-
-        .book-author {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-
-        .btn-read-try {
-            font-size: 11px;
-            color: #0066cc;
-            text-decoration: none;
-        }
-        .btn-read-try:hover {
-            text-decoration: underline;
-        }
-        
-        .loading {
-            font-size: 14px;
-            color: #666;
-            font-style: italic;
-        }
-    </style>
-</head>
-<body>
-
-<div class="books-grid" id="books-container">
-    <div class="loading">Đang tải danh sách sách từ Google Sheets...</div>
-</div>
-
-<script>
-    // 1. ID FILE GOOGLE SHEETS CỦA BẠN (Đã điền sẵn chuẩn xác)
-    const SHEET_ID = '1UdZcyN1rjHxQChTS7hxM0EqrPyORxiXne7JHFPws4bg';
-    
-    // 2. ĐƯỜNG DẪN THƯ MỤC RAW GITHUB (Đã sửa lại đúng định dạng lấy file ảnh gốc từ nhánh main)
-    const GITHUB_FOLDER_URL = 'https://githubusercontent.com';
-    
-    const url = `https://google.com{SHEET_ID}/gviz/tq?tqx=out:json`;
-
-    fetch(url)
-        .then(res => res.text())
-        .then(data => {
-            const jsonString = data.substring(47, data.length - 2);
-            const json = JSON.parse(jsonString);
-            const rows = json.table.rows;
             
-            const container = document.getElementById('books-container');
-            container.innerHTML = ''; 
-
-            const pixelScale = 3.75; 
-
-            rows.forEach(row => {
-                if (!row.c || !row.c[0]) return; // Bỏ qua nếu cột Tên truyện bị trống
-
-                const title    = row.c[0] ? row.c[0].v : '';
-                const author   = row.c[1] ? row.c[1].v : '';
-                const imgMainName  = row.c[2] ? row.c[2].v : '';
-                const imgHoverName = row.c[3] ? row.c[3].v : '';
-                const widthCm  = row.c[4] ? parseFloat(row.c[4].v) : 0;
-                const heightCm = row.c[5] ? parseFloat(row.c[5].v) : 0;
-                const linkForm = row.c[6] ? row.c[6].v : '#';
-                const linkRead = row.c[7] ? row.c[7].v : '#';
-
-                // Tự động ghép nối chuỗi thành link ảnh hoàn chỉnh từ GitHub
-                const imgMain  = GITHUB_FOLDER_URL + imgMainName;
-                const imgHover = GITHUB_FOLDER_URL + imgHoverName;
-
-                // Quy đổi kích thước pixel cho khung ảnh
-                const displayWidth = Math.round(widthCm * pixelScale) + 'px';
-                const displayHeight = Math.round(heightCm * pixelScale) + 'px';
-
-                const bookHtml = `
-                    <div class="book-container">
-                        <div class="ruler-x" style="width: ${displayWidth};" data-label="${widthCm} cm"></div>
-                        <div class="ruler-y" style="height: ${displayHeight};" data-label="${heightCm} cm"></div>
-                        <div class="book-card">
-                            <a href="${linkForm}" target="_blank">
-                                <div class="image-container" style="width: ${displayWidth}; height: ${displayHeight};">
-                                    <img src="${imgMain}" alt="${title}" class="img-main">
-                                    <img src="${imgHover}" alt="${title} Hover" class="img-hover">
-                                </div>
-                            </a>
-                            <div class="book-title" style="max-width: ${displayWidth}; word-wrap: break-word;">${title}</div>
-                            <div class="book-author">Tác giả: ${author}</div>
-                            <a href="${linkRead}" target="_blank" class="btn-read-try">Đọc thử tại đây</a>
-                        </div>
-                    </div>
-                `;
-                container.innerHTML += bookHtml;
-            });
+            if (container.innerHTML === '') {
+                container.innerHTML = '<div class="loading">Không tìm thấy dữ liệu truyện. Hãy chắc chắn rằng bạn đã điền thông tin truyện ở hàng số 2 trong file Google Sheets nhé!</div>';
+            }
         })
         .catch(err => {
-            document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể tải dữ liệu. Vui lòng kiểm tra quyền chia sẻ link Google Sheets!</div>';
+            document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể tải dữ liệu. Vui lòng kiểm tra lại kết nối mạng hoặc thử lại!</div>';
             console.error(err);
         });
 </script>
