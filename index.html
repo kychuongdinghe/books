@@ -2,23 +2,27 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Giao diện Sách Nhỏ Gọn</title>
+    <title>Danh mục Sách Tự Động</title>
     <style>
-        :root {
-            /* ĐÃ FIX CỨNG KÍCH THƯỚC ĐÃ THU NHỎ ĐÚNG TỶ LỆ TRÊN MÀN HÌNH WEB */
-            --width-display: 77px;   /* Tương ứng kích thước thu nhỏ của 20.5cm */
-            --height-display: 104px; /* Tương ứng kích thước thu nhỏ của 27.5cm */
-        }
-
+        /* Tự động đồng bộ font chữ Nunito từ hệ thống Google Sites */
         body {
             font-family: Nunito, sans-serif;
-            margin: 5px;
-            background-color: #fff;
+            margin: 0;
+            padding: 10px;
+            background-color: transparent;
             color: #333;
         }
 
-        /* Khung chứa bao gồm cả cây thước */
-        .container {
+        /* Lưới hiển thị danh sách các cuốn sách (Tự co giãn theo màn hình) */
+        .books-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: flex-start;
+        }
+
+        /* Khung chứa bao gồm cả cây thước của từng cuốn sách */
+        .book-container {
             display: inline-grid;
             grid-template-columns: auto 1fr;
             grid-template-rows: auto 1fr;
@@ -33,10 +37,9 @@
             height: 16px;
             border-bottom: 2px solid #333;
             position: relative;
-            width: var(--width-display);
         }
         .ruler-x::after {
-            content: "20.5 cm";
+            content: attr(data-label);
             position: absolute;
             left: 50%;
             bottom: 2px;
@@ -53,10 +56,9 @@
             width: 32px;
             border-right: 2px solid #333;
             position: relative;
-            height: var(--height-display);
         }
         .ruler-y::after {
-            content: "27.5 cm";
+            content: attr(data-label);
             position: absolute;
             top: 50%;
             right: 4px;
@@ -78,8 +80,6 @@
         /* Khung ảnh hỗ trợ hiệu ứng đổi hình khi Hover và ép đúng tỷ lệ nhỏ gọn */
         .image-container {
             position: relative;
-            width: var(--width-display);
-            height: var(--height-display);
             cursor: pointer;
             overflow: hidden;
             box-shadow: 0 3px 6px rgba(0,0,0,0.1);
@@ -89,7 +89,7 @@
         .image-container img {
             width: 100%;
             height: 100%;
-            object-fit: fill; /* Ép ảnh co giãn khít theo tỷ lệ */
+            object-fit: fill;
             position: absolute;
             top: 0;
             left: 0;
@@ -101,7 +101,7 @@
             opacity: 0;
         }
 
-        /* Khi đưa chuột vào: ẩn ảnh gốc, hiện ảnh thứ 2 */
+        /* Khi đưa chuột vào: đổi ảnh */
         .image-container:hover .img-main {
             opacity: 0;
         }
@@ -114,8 +114,6 @@
             font-size: 13px;
             font-weight: bold;
             margin: 6px 0 2px 0;
-            max-width: var(--width-display);
-            word-wrap: break-word;
             line-height: 1.2;
         }
 
@@ -133,33 +131,84 @@
         .btn-read-try:hover {
             text-decoration: underline;
         }
+        
+        .loading {
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- Thước ngang & dọc cố định thông số cm -->
-    <div class="ruler-x"></div>
-    <div class="ruler-y"></div>
-
-    <!-- Khối thông tin truyện -->
-    <div class="book-card">
-        <!-- Nhấp vào ảnh dẫn tới link Google Form đặt hàng -->
-        <a href="https://forms.gle" target="_blank">
-            <div class="image-container">
-                <!-- Ảnh gốc hiển thị ban đầu -->
-                <img src="2.png" alt="Bìa trước" class="img-main">
-                <!-- Ảnh thứ 2 hiển thị khi di chuột vào -->
-                <img src="3.png" alt="Bìa sau hoặc quà tặng" class="img-hover">
-            </div>
-        </a>
-        
-        <!-- Thông tin văn bản -->
-        <div class="book-title">The Blues of Now</div>
-        <div class="book-author">Tác giả: Nguyễn Minh Quang</div>
-        <a href="https://google.com" target="_blank" class="btn-read-try">Đọc thử tại đây</a>
-    </div>
+<div class="books-grid" id="books-container">
+    <div class="loading">Đang tải danh sách sách từ hệ thống...</div>
 </div>
+
+<script>
+    // THAY ID FILE GOOGLE SHEETS CỦA BẠN VÀO ĐÂY
+    const SHEET_ID = '1UdZcyN1rjHxQChTS7hxM0EqrPyORxiXne7JHFPws4bg';
+    
+    // Tự động lấy dữ liệu cấu trúc JSON từ Google Sheets công khai
+    const url = `https://google.com{SHEET_ID}/gviz/tq?tqx=out:json`;
+
+    fetch(url)
+        .then(res => res.text())
+        .then(data => {
+            // Xử lý chuỗi JSON đặc thù của Google API
+            const jsonString = data.substring(47, data.length - 2);
+            const json = JSON.parse(jsonString);
+            const rows = json.table.rows;
+            
+            const container = document.getElementById('books-container');
+            container.innerHTML = ''; // Xóa chữ Loading đi
+
+            // Hệ số quy đổi màn hình sang pixel gọn gàng (tỉ lệ 1/10)
+            const pixelScale = 3.75; 
+
+            // Vòng lặp tự sinh ra giao diện cho toàn bộ số sách có trong file Excel
+            rows.forEach(row => {
+                const title = row.c[0] ? row.c[0].v : '';
+                const author = row.c[1] ? row.c[1].v : '';
+                const imgMain = row.c[2] ? row.c[2].v : '';
+                const imgHover = row.c[3] ? row.c[3].v : '';
+                const widthCm = row.c[4] ? parseFloat(row.c[4].v) : 0;
+                const heightCm = row.c[5] ? parseFloat(row.c[5].v) : 0;
+                const linkForm = row.c[6] ? row.c[6].v : '#';
+                const linkRead = row.c[7] ? row.c[7].v : '#';
+
+                if (!title) return; // Bỏ qua dòng trống
+
+                // Tính toán pixel hiển thị
+                const displayWidth = Math.round(widthCm * pixelScale) + 'px';
+                const displayHeight = Math.round(heightCm * pixelScale) + 'px';
+
+                // Khởi tạo cấu trúc HTML cho một cuốn sách
+                const bookHtml = `
+                    <div class="book-container">
+                        <div class="ruler-x" style="width: ${displayWidth};" data-label="${widthCm} cm"></div>
+                        <div class="ruler-y" style="height: ${displayHeight};" data-label="${heightCm} cm"></div>
+                        <div class="book-card">
+                            <a href="${linkForm}" target="_blank">
+                                <div class="image-container" style="width: ${displayWidth}; height: ${displayHeight};">
+                                    <img src="${imgMain}" alt="${title}" class="img-main">
+                                    <img src="${imgHover}" alt="${title} Hover" class="img-hover">
+                                </div>
+                            </a>
+                            <div class="book-title" style="max-width: ${displayWidth}; word-wrap: break-word;">${title}</div>
+                            <div class="book-author">Tác giả: ${author}</div>
+                            <a href="${linkRead}" target="_blank" class="btn-read-try">Đọc thử tại đây</a>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += bookHtml;
+            });
+        })
+        .catch(err => {
+            document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể kết nối dữ liệu. Vui lòng kiểm tra lại quyền chia sẻ link Google Sheets!</div>';
+            console.error(err);
+        });
+</script>
 
 </body>
 </html>
