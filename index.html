@@ -34,7 +34,7 @@
             }
         ];
 
-        // Chỉ cố định chiều rộng, chiều cao sẽ tự động co giãn ôm khít theo ảnh bìa của bạn
+        // Chỉ cố định chiều rộng, chiều cao tự động ôm khít theo ảnh bìa của bạn
         const BOOK_WIDTH  = "300px";
         // =========================================================================
     </script>
@@ -42,8 +42,8 @@
     <style>
         body {
             font-family: 'Nunito', sans-serif;
-            margin: 0; /* Xóa bỏ hoàn toàn khoảng cách lề trên cùng trình duyệt */
-            padding: 0; /* Đẩy sát khối ảnh lên mép trên cùng */
+            margin: 0; 
+            padding: 0; 
             background-color: transparent;
             color: #333;
             overflow-x: hidden;
@@ -55,7 +55,7 @@
             flex-wrap: wrap;
             gap: 30px;
             justify-content: flex-start;
-            padding-top: 0; /* Đảm bảo không hở lề trên */
+            padding-top: 0;
         }
 
         /* Khối hiển thị tổng thể (Dịch chuyển toàn bộ sang trái 10px) */
@@ -87,13 +87,15 @@
             display: block;
         }
 
-        /* Ảnh chính hiển thị tự nhiên dạng khối, tự quyết định chiều cao khung */
+        /* Ảnh chính hiển thị tự nhiên dạng khối */
         .image-container .img-main {
             width: 100%;
             height: auto;
             display: block;
             object-fit: contain;
             box-shadow: none !important;
+            transition: opacity 0.25s ease; /* Thêm hiệu ứng mờ dần mượt mà */
+            opacity: 1;
         }
 
         /* Ảnh hover ẩn đi và đè chuẩn vị trí tuyệt đối */
@@ -109,16 +111,22 @@
             box-shadow: none !important;
         }
 
+        /* SỬA LỖI CHỒNG ẢNH TRONG SUỐT: 
+           Khi hover vào container, ảnh cũ biến mất hoàn toàn và ảnh mới xuất hiện sạch sẽ */
+        .image-container:hover .img-main {
+            opacity: 0;
+        }
+        
         .image-container:hover .img-hover {
             opacity: 1;
         }
 
-        /* Phần chữ giờ chỉ cần một khoảng cách margin rất nhỏ (3px) là đã chạm khít mép ảnh */
+        /* Phần chữ căn sát chân ảnh bìa */
         .book-title {
             font-size: 15px; 
             font-weight: bold;
             color: #111;
-            margin: 3px 0 2px 0; /* Không cần dùng lề âm quá lớn gây lỗi hiển thị nữa */
+            margin: 3px 0 2px 0; 
             line-height: 1.2;
             width: 100%;
             word-wrap: break-word;
