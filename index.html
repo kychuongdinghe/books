@@ -2,33 +2,51 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Danh mục Sách Tự Động</title>
+    <title>Danh mục Sách Phong Cách Hiện Đại</title>
+    <script>
+        // =========================================================================
+        // CẤU HÌNH HỆ THỐNG TẠI ĐÂY (CHỈ CẦN THAY ĐỔI KHU VỰC NÀY)
+        // =========================================================================
+        const SHEET_ID          = '1UdZcyN1rjHxQChTS7hxM0EqrPyORxiXne7JHFPws4bg'; 
+        const GITHUB_FOLDER_URL = 'https://raw.githubusercontent.com / kychuongdinghe / books / main / 2.png';
+        
+        // Hệ số thu nhỏ tỷ lệ 1/10 (Khoảng 3.75 pixel cho mỗi cm thực tế)
+        const PIXEL_SCALE       = 3.75; 
+        // =========================================================================
+    </script>
     <style>
         body {
             font-family: Nunito, sans-serif;
             margin: 0;
-            padding: 10px;
+            padding: 15px;
             background-color: transparent;
             color: #333;
         }
+
+        /* Lưới hiển thị danh sách sách giống hệt ảnh mẫu */
         .books-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 35px;
-            justify-content: flex-start;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 25px;
+            justify-content: start;
         }
+
+        /* Khung chứa bao gồm thước đo bao quanh khối sách */
         .book-container {
             display: inline-grid;
             grid-template-columns: auto 1fr;
             grid-template-rows: auto 1fr;
             gap: 5px;
-            padding: 5px;
+            margin-bottom: 15px;
+            justify-items: center; /* Căn giữa khối sách theo thước ngang */
         }
+
+        /* Thước đo hàng ngang */
         .ruler-x {
             grid-column: 2;
             grid-row: 1;
             height: 16px;
-            border-bottom: 2px solid #333;
+            border-bottom: 2px solid #555;
             position: relative;
         }
         .ruler-x::after {
@@ -40,12 +58,15 @@
             font-size: 10px;
             font-weight: bold;
             white-space: nowrap;
+            color: #555;
         }
+
+        /* Thước đo hàng dọc */
         .ruler-y {
             grid-column: 1;
             grid-row: 2;
             width: 32px;
-            border-right: 2px solid #333;
+            border-right: 2px solid #555;
             position: relative;
         }
         .ruler-y::after {
@@ -57,21 +78,30 @@
             font-size: 10px;
             font-weight: bold;
             white-space: nowrap;
+            color: #555;
         }
+
+        /* Thẻ thông tin chi tiết của truyện */
         .book-card {
             grid-column: 2;
             grid-row: 2;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+            width: 100%;
         }
+
+        /* Khung ảnh hiệu ứng Hover */
         .image-container {
             position: relative;
             cursor: pointer;
             overflow: hidden;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08); /* Đổ bóng nhẹ chuẩn phong cách web bán sách */
+            border-radius: 4px;
             background-color: #f7f7f7;
+            width: 100%;
         }
+
         .image-container img {
             width: 100%;
             height: 100%;
@@ -81,26 +111,49 @@
             left: 0;
             transition: opacity 0.25s ease;
         }
-        .image-container .img-hover { opacity: 0; }
-        .image-container:hover .img-main { opacity: 0; }
-        .image-container:hover .img-hover { opacity: 1; }
+
+        .image-container .img-hover {
+            opacity: 0;
+        }
+
+        .image-container:hover .img-main {
+            opacity: 0;
+        }
+        .image-container:hover .img-hover {
+            opacity: 1;
+        }
+
+        /* Tên truyện nằm dưới ảnh giống mẫu */
         .book-title {
-            font-size: 13px;
-            font-weight: bold;
-            margin: 6px 0 2px 0;
-            line-height: 1.2;
+            font-size: 14px;
+            font-weight: 500;
+            color: #222;
+            margin: 10px 0 4px 0;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Tự động cắt chữ nếu tên truyện quá dài (tối đa 2 dòng) */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
+
+        /* Tên tác giả */
         .book-author {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 4px;
+            font-size: 12px;
+            color: #777;
+            margin-bottom: 6px;
         }
+
+        /* Nút link đọc thử */
         .btn-read-try {
-            font-size: 11px;
+            font-size: 12px;
             color: #0066cc;
             text-decoration: none;
+            font-weight: bold;
         }
-        .btn-read-try:hover { text-decoration: underline; }
+        .btn-read-try:hover {
+            text-decoration: underline;
+        }
+        
         .loading {
             font-size: 14px;
             color: #666;
@@ -111,493 +164,77 @@
 <body>
 
 <div class="books-grid" id="books-container">
-    <div class="loading">Đang kết nối và đồng bộ dữ liệu từ Google Sheets...</div>
+    <div class="loading">Đang tải danh mục sách truyện...</div>
 </div>
 
 <script>
-    const SHEET_ID = '1UdZcyN1rjHxQChTS7hxM0EqrPyORxiXne7JHFPws4bg';
+    const url = `https://google.com{SHEET_ID}/gviz/tq?tqx=out:json`;
 
-    // ⚠️ Điền đúng user/repo/branch chứa ảnh của bạn
-    const GITHUB_FOLDER_URL = 'https://raw.githubusercontent.com/kychuongdinghe/books/main/';
+    fetch(url)
+        .then(res => res.text())
+        .then(data => {
+            const match = data.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+            if (!match || !match[1]) throw new Error("Không thể bóc tách dữ liệu");
+            
+            const json = JSON.parse(match[1]);
+            const rows = json.table.rows;
+            
+            const container = document.getElementById('books-container');
+            container.innerHTML = ''; 
 
-    const pixelScale = 3.75;
+            rows.forEach((row) => {
+                if (!row || !row.c) return;
 
-    // Google trả dữ liệu bằng cách tự gọi hàm này — ta định nghĩa sẵn để "đón" dữ liệu,
-    // thay vì dùng fetch() (fetch bị CORS chặn với endpoint gviz).
-    window.google = {
-        visualization: {
-            Query: {
-                setResponse: function (json) {
-                    try {
-                        const rows = json.table.rows;
-                        const container = document.getElementById('books-container');
-                        container.innerHTML = '';
+                const getVal = (index) => {
+                    return (row.c[index] && row.c[index].v !== null) ? row.c[index].v : '';
+                };
 
-                        const getVal = (row, index) => {
-                            return (row.c[index] && row.c[index].v !== null) ? row.c[index].v : '';
-                        };
+                const title        = getVal(0).toString().trim(); 
+                const author       = getVal(1).toString().trim(); 
+                const imgMainName  = getVal(2).toString().trim(); 
+                const imgHoverName = getVal(3).toString().trim(); 
+                const widthCm      = parseFloat(getVal(4)) || 0;  
+                const heightCm     = parseFloat(getVal(5)) || 0;  
+                const linkForm     = getVal(6).toString().trim() || '#'; 
+                const linkRead     = getVal(7).toString().trim() || '#'; 
 
-                        rows.forEach((row) => {
-                            if (!row || !row.c) return;
+                if (title.toLowerCase() === 'title' || !title) return;
 
-                            const title        = getVal(row, 0).toString().trim();
-                            const author       = getVal(row, 1).toString().trim();
-                            const imgMainName  = getVal(row, 2).toString().trim();
-                            const imgHoverName = getVal(row, 3).toString().trim();
-                            const widthCm      = parseFloat(getVal(row, 4)) || 0;
-                            const heightCm     = parseFloat(getVal(row, 5)) || 0;
-                            const linkForm     = getVal(row, 6).toString().trim() || '#';
-                            const linkRead     = getVal(row, 7).toString().trim() || '#';
+                const imgMain  = GITHUB_FOLDER_URL + imgMainName;
+                const imgHover = GITHUB_FOLDER_URL + imgHoverName;
 
-                            if (title === 'title' || !title) return;
+                // Tính kích thước khung ảnh theo tỷ lệ scale đã khai báo ở trên đầu
+                const displayWidth = Math.round(widthCm * PIXEL_SCALE) + 'px';
+                const displayHeight = Math.round(heightCm * PIXEL_SCALE) + 'px';
 
-                            const imgMain  = GITHUB_FOLDER_URL + imgMainName;
-                            const imgHover = GITHUB_FOLDER_URL + imgHoverName;
-
-                            const displayWidth  = Math.round(widthCm * pixelScale) + 'px';
-                            const displayHeight = Math.round(heightCm * pixelScale) + 'px';
-
-                            const bookHtml = `
-                                <div class="book-container">
-                                    <div class="ruler-x" style="width: ${displayWidth};" data-label="${widthCm} cm"></div>
-                                    <div class="ruler-y" style="height: ${displayHeight};" data-label="${heightCm} cm"></div>
-                                    <div class="book-card">
-                                        <a href="${linkForm}" target="_blank" rel="noopener noreferrer">
-                                            <div class="image-container" style="width: ${displayWidth}; height: ${displayHeight};">
-                                                <img src="${imgMain}" alt="${title}" class="img-main">
-                                                <img src="${imgHover}" alt="${title} Hover" class="img-hover">
-                                            </div>
-                                        </a>
-                                        <div class="book-title" style="max-width: ${displayWidth}; word-wrap: break-word;">${title}</div>
-                                        <div class="book-author">Tác giả: ${author}</div>
-                                        <a href="${linkRead}" target="_blank" rel="noopener noreferrer" class="btn-read-try">Đọc thử tại đây</a>
-                                    </div>
+                const bookHtml = `
+                    <div class="book-container">
+                        <div class="ruler-x" style="width: ${displayWidth};" data-label="${widthCm} cm"></div>
+                        <div class="ruler-y" style="height: ${displayHeight};" data-label="${heightCm} cm"></div>
+                        <div class="book-card">
+                            <a href="${linkForm}" target="_blank" style="width: ${displayWidth};">
+                                <div class="image-container" style="width: ${displayWidth}; height: ${displayHeight};">
+                                    <img src="${imgMain}" alt="${title}" class="img-main">
+                                    <img src="${imgHover}" alt="${title} Hover" class="img-hover">
                                 </div>
-                            `;
-                            container.innerHTML += bookHtml;
-                        });
-
-                        if (container.innerHTML === '') {
-                            container.innerHTML = '<div class="loading">Không tìm thấy dữ liệu truyện. Hãy kiểm tra xem bạn đã điền thông tin truyện ở hàng số 2 trong file Google Sheets chưa nhé!</div>';
-                        }
-                    } catch (err) {
-                        document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể đọc dữ liệu bảng tính. Vui lòng kiểm tra lại cấu trúc cột!</div>';
-                        console.error(err);
-                    }
-                }
+                            </a>
+                            <div class="book-title" style="max-width: ${displayWidth};">${title}</div>
+                            <div class="book-author">Tác giả: ${author}</div>
+                            <a href="${linkRead}" target="_blank" class="btn-read-try">Đọc thử tại đây</a>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += bookHtml;
+            });
+            
+            if (container.innerHTML === '') {
+                container.innerHTML = '<div class="loading">Không tìm thấy dữ liệu truyện trong bảng tính.</div>';
             }
-        }
-    };
-
-    // Tải dữ liệu bằng thẻ <script> thay vì fetch() để tránh lỗi CORS
-    const script = document.createElement('script');
-    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
-    script.onerror = function () {
-        document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể đồng bộ dữ liệu. Vui lòng kiểm tra lại liên kết mạng hoặc quyền chia sẻ Google Sheets!</div>';
-    };
-    document.body.appendChild(script);
-</script>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Danh mục Sách Tự Động</title>
-    <style>
-        body {
-            font-family: Nunito, sans-serif;
-            margin: 0;
-            padding: 10px;
-            background-color: transparent;
-            color: #333;
-        }
-        .books-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 35px;
-            justify-content: flex-start;
-        }
-        .book-container {
-            display: inline-grid;
-            grid-template-columns: auto 1fr;
-            grid-template-rows: auto 1fr;
-            gap: 5px;
-            padding: 5px;
-        }
-        .ruler-x {
-            grid-column: 2;
-            grid-row: 1;
-            height: 16px;
-            border-bottom: 2px solid #333;
-            position: relative;
-        }
-        .ruler-x::after {
-            content: attr(data-label);
-            position: absolute;
-            left: 50%;
-            bottom: 2px;
-            transform: translateX(-50%);
-            font-size: 10px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-        .ruler-y {
-            grid-column: 1;
-            grid-row: 2;
-            width: 32px;
-            border-right: 2px solid #333;
-            position: relative;
-        }
-        .ruler-y::after {
-            content: attr(data-label);
-            position: absolute;
-            top: 50%;
-            right: 4px;
-            transform: translateY(-50%) rotate(-90deg);
-            font-size: 10px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-        .book-card {
-            grid-column: 2;
-            grid-row: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .image-container {
-            position: relative;
-            cursor: pointer;
-            overflow: hidden;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            background-color: #f7f7f7;
-        }
-        .image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: fill;
-            position: absolute;
-            top: 0;
-            left: 0;
-            transition: opacity 0.25s ease;
-        }
-        .image-container .img-hover { opacity: 0; }
-        .image-container:hover .img-main { opacity: 0; }
-        .image-container:hover .img-hover { opacity: 1; }
-        .book-title {
-            font-size: 13px;
-            font-weight: bold;
-            margin: 6px 0 2px 0;
-            line-height: 1.2;
-        }
-        .book-author {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-        .btn-read-try {
-            font-size: 11px;
-            color: #0066cc;
-            text-decoration: none;
-        }
-        .btn-read-try:hover { text-decoration: underline; }
-        .loading {
-            font-size: 14px;
-            color: #666;
-            font-style: italic;
-        }
-    </style>
-</head>
-<body>
-
-<div class="books-grid" id="books-container">
-    <div class="loading">Đang kết nối và đồng bộ dữ liệu từ Google Sheets...</div>
-</div>
-
-<script>
-    const SHEET_ID = '1UdZcyN1rjHxQChTS7hxM0EqrPyORxiXne7JHFPws4bg';
-
-    // ⚠️ Điền đúng user/repo/branch chứa ảnh của bạn
-    const GITHUB_FOLDER_URL = 'https://raw.githubusercontent.com/kychuongdinghe/books/main/';
-
-    const pixelScale = 3.75;
-
-    // Google trả dữ liệu bằng cách tự gọi hàm này — ta định nghĩa sẵn để "đón" dữ liệu,
-    // thay vì dùng fetch() (fetch bị CORS chặn với endpoint gviz).
-    window.google = {
-        visualization: {
-            Query: {
-                setResponse: function (json) {
-                    try {
-                        const rows = json.table.rows;
-                        const container = document.getElementById('books-container');
-                        container.innerHTML = '';
-
-                        const getVal = (row, index) => {
-                            return (row.c[index] && row.c[index].v !== null) ? row.c[index].v : '';
-                        };
-
-                        rows.forEach((row) => {
-                            if (!row || !row.c) return;
-
-                            const title        = getVal(row, 0).toString().trim();
-                            const author       = getVal(row, 1).toString().trim();
-                            const imgMainName  = getVal(row, 2).toString().trim();
-                            const imgHoverName = getVal(row, 3).toString().trim();
-                            const widthCm      = parseFloat(getVal(row, 4)) || 0;
-                            const heightCm     = parseFloat(getVal(row, 5)) || 0;
-                            const linkForm     = getVal(row, 6).toString().trim() || '#';
-                            const linkRead     = getVal(row, 7).toString().trim() || '#';
-
-                            if (title === 'title' || !title) return;
-
-                            const imgMain  = GITHUB_FOLDER_URL + imgMainName;
-                            const imgHover = GITHUB_FOLDER_URL + imgHoverName;
-
-                            const displayWidth  = Math.round(widthCm * pixelScale) + 'px';
-                            const displayHeight = Math.round(heightCm * pixelScale) + 'px';
-
-                            const bookHtml = `
-                                <div class="book-container">
-                                    <div class="ruler-x" style="width: ${displayWidth};" data-label="${widthCm} cm"></div>
-                                    <div class="ruler-y" style="height: ${displayHeight};" data-label="${heightCm} cm"></div>
-                                    <div class="book-card">
-                                        <a href="${linkForm}" target="_blank" rel="noopener noreferrer">
-                                            <div class="image-container" style="width: ${displayWidth}; height: ${displayHeight};">
-                                                <img src="${imgMain}" alt="${title}" class="img-main">
-                                                <img src="${imgHover}" alt="${title} Hover" class="img-hover">
-                                            </div>
-                                        </a>
-                                        <div class="book-title" style="max-width: ${displayWidth}; word-wrap: break-word;">${title}</div>
-                                        <div class="book-author">Tác giả: ${author}</div>
-                                        <a href="${linkRead}" target="_blank" rel="noopener noreferrer" class="btn-read-try">Đọc thử tại đây</a>
-                                    </div>
-                                </div>
-                            `;
-                            container.innerHTML += bookHtml;
-                        });
-
-                        if (container.innerHTML === '') {
-                            container.innerHTML = '<div class="loading">Không tìm thấy dữ liệu truyện. Hãy kiểm tra xem bạn đã điền thông tin truyện ở hàng số 2 trong file Google Sheets chưa nhé!</div>';
-                        }
-                    } catch (err) {
-                        document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể đọc dữ liệu bảng tính. Vui lòng kiểm tra lại cấu trúc cột!</div>';
-                        console.error(err);
-                    }
-                }
-            }
-        }
-    };
-
-    // Tải dữ liệu bằng thẻ <script> thay vì fetch() để tránh lỗi CORS
-    const script = document.createElement('script');
-    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
-    script.onerror = function () {
-        document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể đồng bộ dữ liệu. Vui lòng kiểm tra lại liên kết mạng hoặc quyền chia sẻ Google Sheets!</div>';
-    };
-    document.body.appendChild(script);
-</script>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Danh mục Sách Tự Động</title>
-    <style>
-        body {
-            font-family: Nunito, sans-serif;
-            margin: 0;
-            padding: 10px;
-            background-color: transparent;
-            color: #333;
-        }
-        .books-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 35px;
-            justify-content: flex-start;
-        }
-        .book-container {
-            display: inline-grid;
-            grid-template-columns: auto 1fr;
-            grid-template-rows: auto 1fr;
-            gap: 5px;
-            padding: 5px;
-        }
-        .ruler-x {
-            grid-column: 2;
-            grid-row: 1;
-            height: 16px;
-            border-bottom: 2px solid #333;
-            position: relative;
-        }
-        .ruler-x::after {
-            content: attr(data-label);
-            position: absolute;
-            left: 50%;
-            bottom: 2px;
-            transform: translateX(-50%);
-            font-size: 10px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-        .ruler-y {
-            grid-column: 1;
-            grid-row: 2;
-            width: 32px;
-            border-right: 2px solid #333;
-            position: relative;
-        }
-        .ruler-y::after {
-            content: attr(data-label);
-            position: absolute;
-            top: 50%;
-            right: 4px;
-            transform: translateY(-50%) rotate(-90deg);
-            font-size: 10px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-        .book-card {
-            grid-column: 2;
-            grid-row: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .image-container {
-            position: relative;
-            cursor: pointer;
-            overflow: hidden;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            background-color: #f7f7f7;
-        }
-        .image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: fill;
-            position: absolute;
-            top: 0;
-            left: 0;
-            transition: opacity 0.25s ease;
-        }
-        .image-container .img-hover { opacity: 0; }
-        .image-container:hover .img-main { opacity: 0; }
-        .image-container:hover .img-hover { opacity: 1; }
-        .book-title {
-            font-size: 13px;
-            font-weight: bold;
-            margin: 6px 0 2px 0;
-            line-height: 1.2;
-        }
-        .book-author {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 4px;
-        }
-        .btn-read-try {
-            font-size: 11px;
-            color: #0066cc;
-            text-decoration: none;
-        }
-        .btn-read-try:hover { text-decoration: underline; }
-        .loading {
-            font-size: 14px;
-            color: #666;
-            font-style: italic;
-        }
-    </style>
-</head>
-<body>
-
-<div class="books-grid" id="books-container">
-    <div class="loading">Đang kết nối và đồng bộ dữ liệu từ Google Sheets...</div>
-</div>
-
-<script>
-    const SHEET_ID = '1UdZcyN1rjHxQChTS7hxM0EqrPyORxiXne7JHFPws4bg';
-
-    // ⚠️ Điền đúng user/repo/branch chứa ảnh của bạn
-    const GITHUB_FOLDER_URL = 'https://raw.githubusercontent.com/kychuongdinghe/books/main/';
-
-    const pixelScale = 3.75;
-
-    // Google trả dữ liệu bằng cách tự gọi hàm này — ta định nghĩa sẵn để "đón" dữ liệu,
-    // thay vì dùng fetch() (fetch bị CORS chặn với endpoint gviz).
-    window.google = {
-        visualization: {
-            Query: {
-                setResponse: function (json) {
-                    try {
-                        const rows = json.table.rows;
-                        const container = document.getElementById('books-container');
-                        container.innerHTML = '';
-
-                        const getVal = (row, index) => {
-                            return (row.c[index] && row.c[index].v !== null) ? row.c[index].v : '';
-                        };
-
-                        rows.forEach((row) => {
-                            if (!row || !row.c) return;
-
-                            const title        = getVal(row, 0).toString().trim();
-                            const author       = getVal(row, 1).toString().trim();
-                            const imgMainName  = getVal(row, 2).toString().trim();
-                            const imgHoverName = getVal(row, 3).toString().trim();
-                            const widthCm      = parseFloat(getVal(row, 4)) || 0;
-                            const heightCm     = parseFloat(getVal(row, 5)) || 0;
-                            const linkForm     = getVal(row, 6).toString().trim() || '#';
-                            const linkRead     = getVal(row, 7).toString().trim() || '#';
-
-                            if (title === 'title' || !title) return;
-
-                            const imgMain  = GITHUB_FOLDER_URL + imgMainName;
-                            const imgHover = GITHUB_FOLDER_URL + imgHoverName;
-
-                            const displayWidth  = Math.round(widthCm * pixelScale) + 'px';
-                            const displayHeight = Math.round(heightCm * pixelScale) + 'px';
-
-                            const bookHtml = `
-                                <div class="book-container">
-                                    <div class="ruler-x" style="width: ${displayWidth};" data-label="${widthCm} cm"></div>
-                                    <div class="ruler-y" style="height: ${displayHeight};" data-label="${heightCm} cm"></div>
-                                    <div class="book-card">
-                                        <a href="${linkForm}" target="_blank" rel="noopener noreferrer">
-                                            <div class="image-container" style="width: ${displayWidth}; height: ${displayHeight};">
-                                                <img src="${imgMain}" alt="${title}" class="img-main">
-                                                <img src="${imgHover}" alt="${title} Hover" class="img-hover">
-                                            </div>
-                                        </a>
-                                        <div class="book-title" style="max-width: ${displayWidth}; word-wrap: break-word;">${title}</div>
-                                        <div class="book-author">Tác giả: ${author}</div>
-                                        <a href="${linkRead}" target="_blank" rel="noopener noreferrer" class="btn-read-try">Đọc thử tại đây</a>
-                                    </div>
-                                </div>
-                            `;
-                            container.innerHTML += bookHtml;
-                        });
-
-                        if (container.innerHTML === '') {
-                            container.innerHTML = '<div class="loading">Không tìm thấy dữ liệu truyện. Hãy kiểm tra xem bạn đã điền thông tin truyện ở hàng số 2 trong file Google Sheets chưa nhé!</div>';
-                        }
-                    } catch (err) {
-                        document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể đọc dữ liệu bảng tính. Vui lòng kiểm tra lại cấu trúc cột!</div>';
-                        console.error(err);
-                    }
-                }
-            }
-        }
-    };
-
-    // Tải dữ liệu bằng thẻ <script> thay vì fetch() để tránh lỗi CORS
-    const script = document.createElement('script');
-    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
-    script.onerror = function () {
-        document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể đồng bộ dữ liệu. Vui lòng kiểm tra lại liên kết mạng hoặc quyền chia sẻ Google Sheets!</div>';
-    };
-    document.body.appendChild(script);
+        })
+        .catch(err => {
+            document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể đồng bộ dữ liệu. Vui lòng kiểm tra lại cấu trúc bảng tính hoặc kết nối mạng!</div>';
+            console.error(err);
+        });
 </script>
 
 </body>
