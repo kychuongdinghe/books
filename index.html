@@ -34,16 +34,16 @@
             }
         ];
 
+        // Chỉ cố định chiều rộng, chiều cao sẽ tự động co giãn ôm khít theo ảnh bìa của bạn
         const BOOK_WIDTH  = "300px";
-        const BOOK_HEIGHT = "425px";
         // =========================================================================
     </script>
     
     <style>
         body {
             font-family: 'Nunito', sans-serif;
-            margin: 0;
-            padding: 10px;
+            margin: 0; /* Xóa bỏ hoàn toàn khoảng cách lề trên cùng trình duyệt */
+            padding: 0; /* Đẩy sát khối ảnh lên mép trên cùng */
             background-color: transparent;
             color: #333;
             overflow-x: hidden;
@@ -55,71 +55,73 @@
             flex-wrap: wrap;
             gap: 30px;
             justify-content: flex-start;
+            padding-top: 0; /* Đảm bảo không hở lề trên */
         }
 
-        /* Khối hiển thị tổng thể (Dịch chuyển toàn bộ cả ảnh & text sang trái 10px) */
+        /* Khối hiển thị tổng thể (Dịch chuyển toàn bộ sang trái 10px) */
         .book-card {
             display: flex;
             flex-direction: column;
             align-items: center; 
             text-align: center;
-            transform: translateX(-10px); /* Dịch đồng bộ cả cụm card sang trái */
+            transform: translateX(-10px);
+            margin-top: 0;
         }
 
-        /* Khung chứa ảnh (Triệt tiêu hoàn toàn khoảng trống và lề dưới ban đầu của thẻ A) */
+        /* Đường dẫn ảnh ôm sát */
         .image-link {
             display: block; 
             width: 100%; 
             margin: 0; 
             padding: 0;
-            line-height: 0; /* Xóa khoảng trống baseline mặc định của trình duyệt dưới ảnh */
         }
 
+        /* Khung chứa ảnh tự co giãn chiều cao theo ảnh thực tế để xóa khoảng trống */
         .image-container {
             position: relative;
             cursor: pointer;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            box-shadow: none !important;
+            width: 100%;
             margin: 0;
             padding: 0;
+            box-shadow: none !important;
+            display: block;
         }
 
-        /* Ảnh tự co giãn vừa khít và KHÔNG đổ bóng */
-        .image-container img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain; 
+        /* Ảnh chính hiển thị tự nhiên dạng khối, tự quyết định chiều cao khung */
+        .image-container .img-main {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: contain;
+            box-shadow: none !important;
+        }
+
+        /* Ảnh hover ẩn đi và đè chuẩn vị trí tuyệt đối */
+        .image-container .img-hover {
             position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0;
             transition: opacity 0.25s ease;
             box-shadow: none !important;
         }
 
-        .image-container .img-hover {
-            opacity: 0;
-        }
-
-        .image-container:hover .img-main {
-            opacity: 0;
-        }
         .image-container:hover .img-hover {
             opacity: 1;
         }
 
-        /* Đẩy phần text chạm khít chân ảnh bìa bằng cách nâng margin-top âm và xóa khoảng cách dòng trống */
+        /* Phần chữ giờ chỉ cần một khoảng cách margin rất nhỏ (3px) là đã chạm khít mép ảnh */
         .book-title {
             font-size: 15px; 
             font-weight: bold;
             color: #111;
-            margin: -32px 0 2px 0; /* Tăng lề âm từ -12px lên -22px để kéo sát rạt phần text lên */
+            margin: 3px 0 2px 0; /* Không cần dùng lề âm quá lớn gây lỗi hiển thị nữa */
             line-height: 1.2;
             width: 100%;
             word-wrap: break-word;
-            position: relative;
-            z-index: 2; /* Đảm bảo chữ hiển thị rõ nét đè lên phần viền trong suốt của ảnh */
         }
 
         .book-author {
@@ -155,7 +157,7 @@
         const bookHtml = `
             <div class="book-card" style="width: ${BOOK_WIDTH};">
                 <a href="${book.linkForm}" target="_blank" class="image-link">
-                    <div class="image-container" style="width: ${BOOK_WIDTH}; height: ${BOOK_HEIGHT};">
+                    <div class="image-container">
                         <img src="${book.imgMain}" alt="${book.title}" class="img-main">
                         <img src="${book.imgHover}" alt="${book.title} Hover" class="img-hover">
                     </div>
