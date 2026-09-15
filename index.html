@@ -145,18 +145,27 @@
             width: 100%;
         }
 
+       /* Nút Đọc thử nền đen, chữ trắng, cách text trên đúng 5px */
         .btn-read-try {
             font-size: 13px;
-            color: #0066cc;
+            color: #ffffff; /* Chữ trắng */
+            background-color: #000000; /* Khung nền đen */
             text-decoration: none;
             font-weight: bold;
-            width: 100%;
-            display: block;
-            margin: 0 0 2px 0;
-            padding: 0;
+            display: inline-block;
+            margin-top: 5px; /* Cách dòng text tác giả chính xác 5px */
+            padding: 8px 16px; /* Tạo độ rộng vừa vặn cho khung nút bấm */
+            border-radius: 4px; /* Bo góc nhẹ cho hiện đại giống các web thương mại */
+            transition: background-color 0.2s ease, opacity 0.2s ease;
+            width: auto; /* Để nút tự co giãn theo chữ hoặc đổi thành 100% nếu muốn rộng bằng ảnh */
+            box-sizing: border-box;
         }
+        
+        /* Hiệu ứng đổi màu nhẹ khi rê chuột vào nút bấm cho sinh động */
         .btn-read-try:hover {
-            text-decoration: underline;
+            background-color: #222222;
+            opacity: 0.9;
+            text-decoration: none;
         }
     </style>
 </head>
