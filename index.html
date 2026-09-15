@@ -2,21 +2,43 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Danh mục Sách Phong Cách Hiện Đại</title>
+    <title>Danh mục Sách Truyện</title>
     <script>
         // =========================================================================
-        // CẤU HÌNH HỆ THỐNG TẠI ĐÂY (CHỈ CẦN THAY ĐỔI KHU VỰC NÀY)
+        // DANH SÁCH SÁCH TRUYỆN CỦA BẠN (CHỈ CẦN THÊM HOẶC SỬA TẠI KHU VỰC NÀY)
         // =========================================================================
-        const SHEET_ID          = '1UdZcyN1rjHxQChTS7hxM0EqrPyORxiXne7JHFPws4bg'; 
-        const GITHUB_FOLDER_URL = 'https://raw.githubusercontent.com / kychuongdinghe / books / main / 2.png';
-        
+        const DANH_SACH_SACH = [
+            {
+                title: "The Blues of Now",
+                author: "Nguyễn Minh Quang",
+                imgMain: "2.png",
+                imgHover: "3.png",
+                widthCm: 20.5,
+                heightCm: 27.5,
+                linkForm: "https://forms.gle/VTx8ephBzrfhd3Pv5",
+                linkRead: "https://sites.google.com/view/kychuongbooks/review"
+            },
+            {
+                title: "The other's dream",
+                author: "Lê Nguyễn Minh",
+                imgMain: "4.png",
+                imgHover: "2.png",
+                widthCm: 21,
+                heightCm: 27,
+                linkForm: "https://forms.gle",
+                linkRead: "https://google.com"
+            }
+            // Nếu muốn thêm quyển thứ 3, bạn chỉ cần copy cụm dấu {} ở trên, đặt sau dấu phẩy và đổi thông tin.
+        ];
+
         // Hệ số thu nhỏ tỷ lệ 1/10 (Khoảng 3.75 pixel cho mỗi cm thực tế)
-        const PIXEL_SCALE       = 3.75; 
+        const PIXEL_SCALE = 3.75; 
         // =========================================================================
     </script>
+    
     <style>
         body {
-            font-family: Nunito, sans-serif;
+            font-family: 'Nunito', sans-serif;
             margin: 0;
             padding: 15px;
             background-color: transparent;
@@ -38,7 +60,7 @@
             grid-template-rows: auto 1fr;
             gap: 5px;
             margin-bottom: 15px;
-            justify-items: center; /* Căn giữa khối sách theo thước ngang */
+            justify-items: center;
         }
 
         /* Thước đo hàng ngang */
@@ -96,7 +118,7 @@
             position: relative;
             cursor: pointer;
             overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08); /* Đổ bóng nhẹ chuẩn phong cách web bán sách */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
             border-radius: 4px;
             background-color: #f7f7f7;
             width: 100%;
@@ -131,7 +153,7 @@
             margin: 10px 0 4px 0;
             line-height: 1.4;
             display: -webkit-box;
-            -webkit-line-clamp: 2; /* Tự động cắt chữ nếu tên truyện quá dài (tối đa 2 dòng) */
+            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -153,88 +175,40 @@
         .btn-read-try:hover {
             text-decoration: underline;
         }
-        
-        .loading {
-            font-size: 14px;
-            color: #666;
-            font-style: italic;
-        }
     </style>
 </head>
 <body>
 
-<div class="books-grid" id="books-container">
-    <div class="loading">Đang tải danh mục sách truyện...</div>
-</div>
+<div class="books-grid" id="books-container"></div>
 
 <script>
-    const url = `https://google.com{SHEET_ID}/gviz/tq?tqx=out:json`;
+    // Vì index.html nằm chung thư mục với ảnh trên GitHub, ta dùng luôn đường dẫn tương đối, không cần ghép URL tuyệt đối
+    const container = document.getElementById('books-container');
 
-    fetch(url)
-        .then(res => res.text())
-        .then(data => {
-            const match = data.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-            if (!match || !match[1]) throw new Error("Không thể bóc tách dữ liệu");
-            
-            const json = JSON.parse(match[1]);
-            const rows = json.table.rows;
-            
-            const container = document.getElementById('books-container');
-            container.innerHTML = ''; 
+    DANH_SACH_SACH.forEach((book) => {
+        // Tính kích thước khung ảnh theo tỷ lệ scale
+        const displayWidth = Math.round(book.widthCm * PIXEL_SCALE) + 'px';
+        const displayHeight = Math.round(book.heightCm * PIXEL_SCALE) + 'px';
 
-            rows.forEach((row) => {
-                if (!row || !row.c) return;
-
-                const getVal = (index) => {
-                    return (row.c[index] && row.c[index].v !== null) ? row.c[index].v : '';
-                };
-
-                const title        = getVal(0).toString().trim(); 
-                const author       = getVal(1).toString().trim(); 
-                const imgMainName  = getVal(2).toString().trim(); 
-                const imgHoverName = getVal(3).toString().trim(); 
-                const widthCm      = parseFloat(getVal(4)) || 0;  
-                const heightCm     = parseFloat(getVal(5)) || 0;  
-                const linkForm     = getVal(6).toString().trim() || '#'; 
-                const linkRead     = getVal(7).toString().trim() || '#'; 
-
-                if (title.toLowerCase() === 'title' || !title) return;
-
-                const imgMain  = GITHUB_FOLDER_URL + imgMainName;
-                const imgHover = GITHUB_FOLDER_URL + imgHoverName;
-
-                // Tính kích thước khung ảnh theo tỷ lệ scale đã khai báo ở trên đầu
-                const displayWidth = Math.round(widthCm * PIXEL_SCALE) + 'px';
-                const displayHeight = Math.round(heightCm * PIXEL_SCALE) + 'px';
-
-                const bookHtml = `
-                    <div class="book-container">
-                        <div class="ruler-x" style="width: ${displayWidth};" data-label="${widthCm} cm"></div>
-                        <div class="ruler-y" style="height: ${displayHeight};" data-label="${heightCm} cm"></div>
-                        <div class="book-card">
-                            <a href="${linkForm}" target="_blank" style="width: ${displayWidth};">
-                                <div class="image-container" style="width: ${displayWidth}; height: ${displayHeight};">
-                                    <img src="${imgMain}" alt="${title}" class="img-main">
-                                    <img src="${imgHover}" alt="${title} Hover" class="img-hover">
-                                </div>
-                            </a>
-                            <div class="book-title" style="max-width: ${displayWidth};">${title}</div>
-                            <div class="book-author">Tác giả: ${author}</div>
-                            <a href="${linkRead}" target="_blank" class="btn-read-try">Đọc thử tại đây</a>
+        const bookHtml = `
+            <div class="book-container">
+                <div class="ruler-x" style="width: ${displayWidth};" data-label="${book.widthCm} cm"></div>
+                <div class="ruler-y" style="height: ${displayHeight};" data-label="${book.heightCm} cm"></div>
+                <div class="book-card">
+                    <a href="${book.linkForm}" target="_blank" style="width: ${displayWidth};">
+                        <div class="image-container" style="width: ${displayWidth}; height: ${displayHeight};">
+                            <img src="${book.imgMain}" alt="${book.title}" class="img-main">
+                            <img src="${book.imgHover}" alt="${book.title} Hover" class="img-hover">
                         </div>
-                    </div>
-                `;
-                container.innerHTML += bookHtml;
-            });
-            
-            if (container.innerHTML === '') {
-                container.innerHTML = '<div class="loading">Không tìm thấy dữ liệu truyện trong bảng tính.</div>';
-            }
-        })
-        .catch(err => {
-            document.getElementById('books-container').innerHTML = '<div class="loading" style="color:red;">Không thể đồng bộ dữ liệu. Vui lòng kiểm tra lại cấu trúc bảng tính hoặc kết nối mạng!</div>';
-            console.error(err);
-        });
+                    </a>
+                    <div class="book-title" style="max-width: ${displayWidth};">${book.title}</div>
+                    <div class="book-author">Tác giả: ${book.author}</div>
+                    <a href="${book.linkRead}" target="_blank" class="btn-read-try">Đọc thử tại đây</a>
+                </div>
+            </div>
+        `;
+        container.innerHTML += bookHtml;
+    });
 </script>
 
 </body>
