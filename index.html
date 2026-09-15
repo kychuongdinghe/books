@@ -2,12 +2,20 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Danh mục Sách Truyện kích thước lớn</title>
+    <title>Danh mục Sách Truyện Tối Giản</title>
     <script>
         // =========================================================================
         // DANH SÁCH SÁCH TRUYỆN CỦA BẠN (CHỈ CẦN THÊM HOẶC SỬA TẠI KHU VỰC NÀY)
         // =========================================================================
         const DANH_SACH_SACH = [
+            {
+                title: "The Blues of Now",
+                author: "Nguyễn Minh Quang",
+                imgMain: "2.png",
+                imgHover: "3.png",
+                linkForm: "https://forms.gle",
+                linkRead: "https://google.com"
+            },
             {
                 title: "The Blues of Now - Bìa cứng",
                 author: "Nguyễn Minh Quang",
@@ -17,15 +25,7 @@
                 linkRead: "https://google.com"
             },
             {
-                title: "The Blues of Now - Bìa mềm",
-                author: "Nguyễn Minh Quang",
-                imgMain: "2.png", // Bạn có thể thay đổi bằng file ảnh bìa cứng riêng nếu có
-                imgHover: "3.png",
-                linkForm: "https://forms.gle",
-                linkRead: "https://google.com"
-            },
-            {
-                title: "The other's dream - Bìa cứng",
+                title: "The other's dream",
                 author: "Lê Nguyễn Minh",
                 imgMain: "4.png",
                 imgHover: "2.png",
@@ -34,9 +34,9 @@
             }
         ];
 
-        // Cấu hình kích thước ô hiển thị ảnh: 600px rộng x 850px cao
-        const BOOK_WIDTH  = "600px";
-        const BOOK_HEIGHT = "850px";
+        // Đã giảm kích thước xuống gọn gàng (vẫn giữ đúng tỷ lệ đứng của bìa truyện)
+        const BOOK_WIDTH  = "300px";
+        const BOOK_HEIGHT = "425px";
         // =========================================================================
     </script>
     
@@ -44,16 +44,16 @@
         body {
             font-family: 'Nunito', sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             background-color: transparent;
             color: #333;
         }
 
-        /* Lưới hiển thị danh sách sách tự động xuống dòng khi hết không gian ngang */
+        /* Lưới hiển thị danh sách sách tự động xuống dòng */
         .books-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 50px; /* Khoảng cách thông thoáng giữa các ô sách lớn */
+            gap: 30px; /* Thu hẹp khoảng cách giữa các cột sách */
             justify-content: flex-start;
         }
 
@@ -65,7 +65,7 @@
             text-align: center;
         }
 
-        /* Khung chứa ảnh cố định kích thước chuẩn 600x850 (Đã bỏ hoàn toàn nền và khung thước) */
+        /* Khung chứa ảnh (Đã xóa bỏ hoàn toàn tất cả hiệu ứng đổ bóng shadow) */
         .image-container {
             position: relative;
             cursor: pointer;
@@ -73,16 +73,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            background: transparent;
+            box-shadow: none !important; /* Chặn hoàn toàn mọi đường shadow ẩn */
         }
 
-        /* Ảnh tự co giãn vừa khít theo tỷ lệ gốc bên trong không gian 600x850 */
+        /* Ảnh tự co giãn vừa khít, giữ nguyên tỷ lệ gốc và KHÔNG đổ bóng */
         .image-container img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain; 
             position: absolute;
             transition: opacity 0.25s ease;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.12); /* Đổ bóng nhẹ nghệ thuật để nổi bật khối sách lớn */
+            box-shadow: none !important; /* Xóa bóng đổ của riêng tệp ảnh */
         }
 
         .image-container .img-hover {
@@ -97,32 +99,32 @@
             opacity: 1;
         }
 
-        /* Định dạng phần chữ căn giữa tương xứng với kích thước ảnh lớn */
+        /* Thu nhỏ cỡ chữ và kéo sát khoảng cách lại gần ảnh bìa */
         .book-title {
-            font-size: 20px; /* Tăng cỡ chữ để cân đối với ảnh 600px */
+            font-size: 15px; 
             font-weight: bold;
             color: #111;
-            margin: 18px 0 6px 0;
-            line-height: 1.4;
+            margin: 10px 0 2px 0; /* Giảm khoảng cách phía trên và phía dưới chữ */
+            line-height: 1.3;
             width: 100%;
             word-wrap: break-word;
         }
 
         .book-author {
-            font-size: 16px;
+            font-size: 12px;
             color: #666;
-            margin-bottom: 8px;
+            margin: 0 0 4px 0; /* Thu nhỏ khoảng cách lề dưới */
             width: 100%;
         }
 
         .btn-read-try {
-            font-size: 16px;
+            font-size: 13px;
             color: #0066cc;
             text-decoration: none;
             font-weight: bold;
             width: 100%;
             display: block;
-            margin-top: 4px;
+            margin: 0;
         }
         .btn-read-try:hover {
             text-decoration: underline;
@@ -139,15 +141,12 @@
     DANH_SACH_SACH.forEach((book) => {
         const bookHtml = `
             <div class="book-card" style="width: ${BOOK_WIDTH};">
-                <!-- Nhấp vào ảnh dẫn thẳng tới trang đặt mua -->
                 <a href="${book.linkForm}" target="_blank" style="display: block; width: 100%;">
                     <div class="image-container" style="width: ${BOOK_WIDTH}; height: ${BOOK_HEIGHT};">
                         <img src="${book.imgMain}" alt="${book.title}" class="img-main">
                         <img src="${book.imgHover}" alt="${book.title} Hover" class="img-hover">
                     </div>
                 </a>
-                
-                <!-- Thông tin văn bản căn giữa đồng đều -->
                 <div class="book-title">${book.title}</div>
                 <div class="book-author">Tác giả: ${book.author}</div>
                 <a href="${book.linkRead}" target="_blank" class="btn-read-try">Đọc thử tại đây</a>
