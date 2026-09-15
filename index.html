@@ -15,8 +15,8 @@
                 imgHover: "3.png",
                 widthCm: 20.5,
                 heightCm: 27.5,
-                linkForm: "https://forms.gle/VTx8ephBzrfhd3Pv5",
-                linkRead: "https://sites.google.com/view/kychuongbooks/review"
+                linkForm: "https://forms.gle",
+                linkRead: "https://google.com"
             },
             {
                 title: "The other's dream",
@@ -28,11 +28,12 @@
                 linkForm: "https://forms.gle",
                 linkRead: "https://google.com"
             }
-            // Nếu muốn thêm quyển thứ 3, bạn chỉ cần copy cụm dấu {} ở trên, đặt sau dấu phẩy và đổi thông tin.
         ];
 
-        // Hệ số thu nhỏ tỷ lệ 1/10 (Khoảng 3.75 pixel cho mỗi cm thực tế)
-        const PIXEL_SCALE = 3.75; 
+        // Hệ số quy đổi kích thước ô xám 16x9 cm ra màn hình web
+        const PIXEL_SCALE = 3.78; 
+        const FRAME_WIDTH = Math.round(16 * 10 * PIXEL_SCALE) + "px";  // ~605px
+        const FRAME_HEIGHT = Math.round(9 * 10 * PIXEL_SCALE) + "px";  // ~340px
         // =========================================================================
     </script>
     
@@ -45,29 +46,28 @@
             color: #333;
         }
 
-        /* Lưới hiển thị danh sách sách giống hệt ảnh mẫu */
+        /* Lưới hiển thị danh sách sách tự động xuống dòng */
         .books-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 25px;
-            justify-content: start;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: flex-start;
         }
 
-        /* Khung chứa bao gồm thước đo bao quanh khối sách */
+        /* Khung chứa tổng thể bao gồm cả thước đo */
         .book-container {
             display: inline-grid;
             grid-template-columns: auto 1fr;
             grid-template-rows: auto 1fr;
-            gap: 5px;
-            margin-bottom: 15px;
-            justify-items: center;
+            gap: 8px;
+            margin-bottom: 25px;
         }
 
         /* Thước đo hàng ngang */
         .ruler-x {
             grid-column: 2;
             grid-row: 1;
-            height: 16px;
+            height: 18px;
             border-bottom: 2px solid #555;
             position: relative;
         }
@@ -75,19 +75,19 @@
             content: attr(data-label);
             position: absolute;
             left: 50%;
-            bottom: 2px;
+            bottom: 3px;
             transform: translateX(-50%);
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
             white-space: nowrap;
-            color: #555;
+            color: #444;
         }
 
         /* Thước đo hàng dọc */
         .ruler-y {
             grid-column: 1;
             grid-row: 2;
-            width: 32px;
+            width: 35px;
             border-right: 2px solid #555;
             position: relative;
         }
@@ -95,82 +95,85 @@
             content: attr(data-label);
             position: absolute;
             top: 50%;
-            right: 4px;
+            right: 5px;
             transform: translateY(-50%) rotate(-90deg);
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
             white-space: nowrap;
-            color: #555;
+            color: #444;
         }
 
-        /* Thẻ thông tin chi tiết của truyện */
+        /* Khối hiển thị thông tin và ô xám tro */
         .book-card {
             grid-column: 2;
             grid-row: 2;
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
-            width: 100%;
+            align-items: center; /* Căn giữa toàn bộ text bên dưới */
+            text-align: center;
         }
 
-        /* Khung ảnh hiệu ứng Hover */
-        .image-container {
+        /* Ô hiển thị nền xám tro kích thước chuẩn 16 x 9 cm */
+        .image-box-frame {
             position: relative;
+            background-color: #f0f0f0; /* Màu xám tro */
+            border-radius: 6px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
             overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-            border-radius: 4px;
-            background-color: #f7f7f7;
-            width: 100%;
         }
 
-        .image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: fill;
+        /* Ảnh hiển thị theo tỷ lệ gốc bên trong ô xám */
+        .image-box-frame img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain; /* Giữ nguyên tỷ lệ ảnh gốc, không bị hẹp */
             position: absolute;
-            top: 0;
-            left: 0;
             transition: opacity 0.25s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12); /* Tạo hiệu ứng đổ bóng cho riêng cuốn sách */
         }
 
-        .image-container .img-hover {
+        .image-box-frame .img-hover {
             opacity: 0;
         }
 
-        .image-container:hover .img-main {
+        /* Hiệu ứng Hover đổi ảnh bìa sau mượt mà */
+        .image-box-frame:hover .img-main {
             opacity: 0;
         }
-        .image-container:hover .img-hover {
+        .image-box-frame:hover .img-hover {
             opacity: 1;
         }
 
-        /* Tên truyện nằm dưới ảnh giống mẫu */
+        /* Định dạng phần text đã dàn đều và tăng cỡ chữ */
         .book-title {
-            font-size: 14px;
-            font-weight: 500;
-            color: #222;
-            margin: 10px 0 4px 0;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            font-size: 16px;
+            font-weight: bold;
+            color: #111;
+            margin: 14px 0 5px 0;
+            line-height: 1.3;
+            width: 100%;
+            word-wrap: break-word;
         }
 
-        /* Tên tác giả */
         .book-author {
-            font-size: 12px;
-            color: #777;
-            margin-bottom: 6px;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+            width: 100%;
         }
 
-        /* Nút link đọc thử */
         .btn-read-try {
-            font-size: 12px;
+            font-size: 14px;
             color: #0066cc;
             text-decoration: none;
             font-weight: bold;
+            width: 100%;
+            display: block;
+            margin-top: 2px;
         }
         .btn-read-try:hover {
             text-decoration: underline;
@@ -182,26 +185,30 @@
 <div class="books-grid" id="books-container"></div>
 
 <script>
-    // Vì index.html nằm chung thư mục với ảnh trên GitHub, ta dùng luôn đường dẫn tương đối, không cần ghép URL tuyệt đối
     const container = document.getElementById('books-container');
 
-    DANH_SACH_SACH.forEach((book) => {
-        // Tính kích thước khung ảnh theo tỷ lệ scale
-        const displayWidth = Math.round(book.widthCm * PIXEL_SCALE) + 'px';
-        const displayHeight = Math.round(book.heightCm * PIXEL_SCALE) + 'px';
+    // Áp dụng kích thước khung xám cố định cho tất cả sách
+    document.documentElement.style.setProperty('--frame-w', FRAME_WIDTH);
+    document.documentElement.style.setProperty('--frame-h', FRAME_HEIGHT);
 
+    DANH_SACH_SACH.forEach((book) => {
         const bookHtml = `
             <div class="book-container">
-                <div class="ruler-x" style="width: ${displayWidth};" data-label="${book.widthCm} cm"></div>
-                <div class="ruler-y" style="height: ${displayHeight};" data-label="${book.heightCm} cm"></div>
-                <div class="book-card">
-                    <a href="${book.linkForm}" target="_blank" style="width: ${displayWidth};">
-                        <div class="image-container" style="width: ${displayWidth}; height: ${displayHeight};">
+                <!-- Thước đo vẫn hiển thị số cm thực tế lấy từ data dữ liệu của bạn -->
+                <div class="ruler-x" style="width: ${FRAME_WIDTH};" data-label="${book.widthCm} cm"></div>
+                <div class="ruler-y" style="height: ${FRAME_HEIGHT};" data-label="${book.heightCm} cm"></div>
+                
+                <div class="book-card" style="width: ${FRAME_WIDTH};">
+                    <!-- Ô hiển thị xám tro liên kết đến biểu mẫu đặt hàng -->
+                    <a href="${book.linkForm}" target="_blank" style="display: block; width: 100%;">
+                        <div class="image-box-frame" style="width: ${FRAME_WIDTH}; height: ${FRAME_HEIGHT};">
                             <img src="${book.imgMain}" alt="${book.title}" class="img-main">
                             <img src="${book.imgHover}" alt="${book.title} Hover" class="img-hover">
                         </div>
                     </a>
-                    <div class="book-title" style="max-width: ${displayWidth};">${book.title}</div>
+                    
+                    <!-- Phần text thông tin đã được căn giữa toàn bộ -->
+                    <div class="book-title">${book.title}</div>
                     <div class="book-author">Tác giả: ${book.author}</div>
                     <a href="${book.linkRead}" target="_blank" class="btn-read-try">Đọc thử tại đây</a>
                 </div>
