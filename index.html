@@ -56,21 +56,23 @@
   color:#A9A397;
   margin-top:150px;
 }
+/* Lưới hiển thị danh sách sách (CĂN GIỮA TRÌNH DUYỆT) */
         .books-grid {
             display: flex;
             flex-wrap: wrap;
             gap: 30px;
-            justify-content: flex-start;
-            padding-top: 0;
+            justify-content: center; /* Lệnh ép toàn bộ các ô sách căn thẳng ra chính giữa màn hình */
+            padding: 15px 10px;      /* Tạo khoảng cách đệm viền nhẹ khi co trên điện thoại */
+            box-sizing: border-box;
+            width: 100%;
         }
 
-        /* Khối hiển thị tổng thể (Dịch chuyển toàn bộ sang trái 10px) */
+        /* Khối hiển thị tổng thể */
         .book-card {
             display: flex;
             flex-direction: column;
             align-items: center; 
             text-align: center;
-            transform: translateX(0px);
             margin-top: 0;
         }
 
