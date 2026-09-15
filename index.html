@@ -34,7 +34,6 @@
             }
         ];
 
-        // Đã giảm kích thước xuống gọn gàng (vẫn giữ đúng tỷ lệ đứng của bìa truyện)
         const BOOK_WIDTH  = "300px";
         const BOOK_HEIGHT = "425px";
         // =========================================================================
@@ -47,25 +46,35 @@
             padding: 10px;
             background-color: transparent;
             color: #333;
+            overflow-x: hidden;
         }
 
-        /* Lưới hiển thị danh sách sách tự động xuống dòng */
+        /* Lưới hiển thị danh sách sách */
         .books-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 30px; /* Thu hẹp khoảng cách giữa các cột sách */
+            gap: 30px;
             justify-content: flex-start;
         }
 
-        /* Khối hiển thị tổng thể của một cuốn sách */
+        /* Khối hiển thị tổng thể (Dịch chuyển toàn bộ cả ảnh & text sang trái 10px) */
         .book-card {
             display: flex;
             flex-direction: column;
             align-items: center; 
             text-align: center;
+            transform: translateX(-10px); /* Dịch đồng bộ cả cụm card sang trái */
         }
 
-        /* Khung chứa ảnh (Đã xóa bỏ hoàn toàn tất cả hiệu ứng đổ bóng shadow) */
+        /* Khung chứa ảnh (Triệt tiêu hoàn toàn khoảng trống và lề dưới ban đầu của thẻ A) */
+        .image-link {
+            display: block; 
+            width: 100%; 
+            margin: 0; 
+            padding: 0;
+            line-height: 0; /* Xóa khoảng trống baseline mặc định của trình duyệt dưới ảnh */
+        }
+
         .image-container {
             position: relative;
             cursor: pointer;
@@ -74,24 +83,25 @@
             align-items: center;
             justify-content: center;
             background: transparent;
-            box-shadow: none !important; /* Chặn hoàn toàn mọi đường shadow ẩn */
+            box-shadow: none !important;
+            margin: 0;
+            padding: 0;
         }
 
-        /* Ảnh tự co giãn vừa khít, giữ nguyên tỷ lệ gốc và KHÔNG đổ bóng */
+        /* Ảnh tự co giãn vừa khít và KHÔNG đổ bóng */
         .image-container img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain; 
             position: absolute;
             transition: opacity 0.25s ease;
-            box-shadow: none !important; /* Xóa bóng đổ của riêng tệp ảnh */
+            box-shadow: none !important;
         }
 
         .image-container .img-hover {
             opacity: 0;
         }
 
-        /* Hiệu ứng Hover lật ảnh bìa sau mượt mà */
         .image-container:hover .img-main {
             opacity: 0;
         }
@@ -99,21 +109,23 @@
             opacity: 1;
         }
 
-        /* Thu nhỏ cỡ chữ và kéo sát khoảng cách lại gần ảnh bìa */
+        /* Đẩy phần text chạm khít chân ảnh bìa bằng cách nâng margin-top âm và xóa khoảng cách dòng trống */
         .book-title {
             font-size: 15px; 
             font-weight: bold;
             color: #111;
-            margin: 2px 0 2px 0; /* Giảm khoảng cách phía trên và phía dưới chữ */
-            line-height: 1;
+            margin: -22px 0 2px 0; /* Tăng lề âm từ -12px lên -22px để kéo sát rạt phần text lên */
+            line-height: 1.2;
             width: 100%;
             word-wrap: break-word;
+            position: relative;
+            z-index: 2; /* Đảm bảo chữ hiển thị rõ nét đè lên phần viền trong suốt của ảnh */
         }
 
         .book-author {
             font-size: 12px;
             color: #666;
-            margin: 0 0 4px 0; /* Thu nhỏ khoảng cách lề dưới */
+            margin: 0 0 2px 0; 
             width: 100%;
         }
 
@@ -125,6 +137,7 @@
             width: 100%;
             display: block;
             margin: 0;
+            padding: 0;
         }
         .btn-read-try:hover {
             text-decoration: underline;
@@ -141,7 +154,7 @@
     DANH_SACH_SACH.forEach((book) => {
         const bookHtml = `
             <div class="book-card" style="width: ${BOOK_WIDTH};">
-                <a href="${book.linkForm}" target="_blank" style="display: block; width: 100%;">
+                <a href="${book.linkForm}" target="_blank" class="image-link">
                     <div class="image-container" style="width: ${BOOK_WIDTH}; height: ${BOOK_HEIGHT};">
                         <img src="${book.imgMain}" alt="${book.title}" class="img-main">
                         <img src="${book.imgHover}" alt="${book.title} Hover" class="img-hover">
